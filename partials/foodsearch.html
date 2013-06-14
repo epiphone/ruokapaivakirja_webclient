@@ -1,0 +1,13 @@
+<form>
+    <input type="text" ng-model="query" ng-change="search(query)" autofocus="autofocus">
+    <button ng-click="search(query)">Hae ruokia</button>
+</form>
+<div ng-show="loading">
+    Lataa...
+</div>
+<div id="results">
+    <div ng-repeat="res in result.data">
+        <a href="#/food/{{res[0]}}">{{res[1]}}</a>
+    </div>
+</div>
+
