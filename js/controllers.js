@@ -32,7 +32,7 @@ angular.module("app.controllers", [])
 
 
 // Search foods, list results, show food details
-.controller("FoodSearchCtrl", function($scope, $http, $timeout) {
+.controller("FoodSearchCtrl", function($scope, $http, $timeout, API) {
     $scope.loading = false;
     var keyPressIndex = 0;
 
@@ -88,5 +88,30 @@ angular.module("app.controllers", [])
     $scope.modalOptions = {
         backdropFade: true,
         dialogFade: true
+    };
+
+    $scope.addFood = function() {
+        var dateParts = $scope.date.split("."),
+        day = dateParts[0].length == 1 ? "0" + dateParts[0] : dateParts[0],
+        month = dateParts[1].length == 1 ? "0" + dateParts[1] : dateParts[1],
+        year = dateParts[2].length == 2 ? "20" + dateParts[2] : dateParts[2],
+        data = {
+            fid: $scope.food["_id"],
+            amount: $scope.amount,
+            date: year + month + day
+        };
+        $scope.addStatus = "loading";
+
+        API.fetchSigned("/user/bites", "POST", data)
+        .then(function(result){
+            if (result.status == "success") {
+                $scope.addStatus = "success";
+            } else {
+                $scope.addStatus = "error";
+            }
+        },function(error) {
+            console.log("ERROR=" + JSON.stringify(error));
+            $scope.addStatus = "error";
+        });
     };
 });
