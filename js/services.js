@@ -1,3 +1,4 @@
+/* global CryptoJS  */
 "use strict";
 
 /* Services */
@@ -16,9 +17,9 @@ angular.module("app.services", [])
     function getUsername() { return username; }
     function getPassword() { return password; }
 
-    function isLoggedIn(isLoggedIn) {
-        if (isLoggedIn !== undefined) {
-            loggedIn = isLoggedIn;
+    function isLoggedIn(status) {
+        if (status !== undefined) {
+            loggedIn = status;
         }
         return loggedIn;
     }
@@ -40,7 +41,7 @@ angular.module("app.services", [])
         isLoggedIn: isLoggedIn,
         setCredentials: setCredentials,
         logout: logout
-    }
+    };
 })
 
 // SHA1 ja HMAC-SHA1-salausfunktiot
@@ -48,8 +49,8 @@ angular.module("app.services", [])
     var replacements = "aooAOO";
 
     function replaceUmlauts(base) {
-        return base.replace(/[äöåÄÖÅ]/g, function(char) {
-            return replacements.charAt("äöåÄÖÅ".indexOf(char));
+        return base.replace(/[äöåÄÖÅ]/g, function(c) {
+            return replacements.charAt("äöåÄÖÅ".indexOf(c));
         });
     }
 
@@ -66,7 +67,7 @@ angular.module("app.services", [])
     return {
         sha1: sha1,
         hmac: hmac
-    }
+    };
 })
 
 /* Autentikoidut HTTP-pyynnöt. */
@@ -110,16 +111,16 @@ angular.module("app.services", [])
             "username": UserService.getUsername(),
             "client": appName,
             "timestamp": new Date().getTime().toString().substr(0, 10)
-        }
+        };
 
         // Nämä parametrit eivät tule Authorization-headeriin,
         // niitä käytetään vain allekirjoituksessa:
         var signatureParams = {};
-        for (var attr in params) {
-            signatureParams[attr] = params[attr];
+        for (var a in params) {
+            signatureParams[a] = params[a];
         }
-        for (var attr in data) {
-            signatureParams[attr] = data[attr];
+        for (var b in data) {
+            signatureParams[b] = data[b];
         }
 
         // Kääritään parametrit yhteen merkkijonoon allekirjoitusta varten:
@@ -166,5 +167,5 @@ angular.module("app.services", [])
     return {
         fetchSigned: fetchSigned,
         fetch: fetch
-    }
-})
+    };
+});

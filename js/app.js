@@ -12,15 +12,24 @@ Aleksi Pekkala
 angular.module("app", ["app.filters", "app.services", "app.directives", "app.controllers", "ui.bootstrap"])
 .config(function($routeProvider, $httpProvider) {
 
-    // Reititys
+    // Routing
     $routeProvider.when("/", {templateUrl: "partials/index.html", controller: "IndexCtrl"});
     $routeProvider.when("/login", {templateUrl: "partials/login.html", controller: "LoginCtrl"});
-    $routeProvider.when("/foodsearch", {templateUrl: "partials/foodsearch.html", controller: "FoodSearchCtrl"});
-    $routeProvider.when("/food/:fid", {templateUrl: "partials/food.html", controller: "FoodCtrl"});
+    $routeProvider.when("/foods", {templateUrl: "partials/foods.html", controller: "FoodSearchCtrl"});
 
     $routeProvider.otherwise({redirectTo: "/"});
 
-    // Sallitaan CORS
+    // Enable CORS
     $httpProvider.defaults.useXDomain = true;
     delete $httpProvider.defaults.headers.common["X-Requested-With"];
+})
+
+.run(function($rootScope, $location, UserService) {
+    // Redirect to login page if the user tries to access a restricted location
+    $rootScope.$on("$locationChangeStart", function (event, next, current) {
+        if (!UserService.isLoggedIn() && next.endsWith("#/login")) {
+            console.log("Redirecting to login page.");
+            $location.path("/login");
+        }
+    });
 });
