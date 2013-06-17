@@ -1,13 +1,69 @@
-<form>
-    <input type="text" ng-model="query" ng-change="search(query)" autofocus="autofocus">
-    <button ng-click="search(query)">Hae ruokia</button>
-</form>
-<div ng-show="loading">
-    Lataa...
-</div>
-<div id="results">
-    <div ng-repeat="res in result.data">
-        <a href="#/food/{{res[0]}}">{{res[1]}}</a>
+<div class="row">
+
+  <!-- FOOD SEARCH & RESULTS -->
+  <div class="span6">
+    <form class="form-search">
+      <input type="text" class="search-query" ng-model="query" ng-change="search(query)" autofocus="autofocus" placeholder="Hae elintarvikkeita">
+    </form>
+    <div ng-show="loading">
+      Lataa...
     </div>
-</div>
+    <div id="results">
+      <div ng-repeat="res in result.data">
+        <a href="" ng-click="select(res[0])">{{res[1]}}</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOD DETAILS -->
+  <div class="span6" ng-switch on="isFoodLoading">
+    <div ng-switch-when="false">
+      <h3>{{food.name|title}}</h3>
+
+      Annos: <input type="number" class="input-mini" ng-model="amount"> grammaa
+      <button class="btn btn-large" ng-click="openModal()">Lisää annos</button>
+      <table class="table table-hover">
+        <tr class="info">
+          <th>Ravintotekijä</th>
+          <th>Pitoisuus</th>
+          <th>Yksikkö</th>
+        </tr>
+        <tr class="info">
+          <td colspan="3">Perusravintotekijät</td>
+        </tr>
+        <tr ng-repeat='item in ["energia, laskennallinen", "hiilihydraatti imeytyvä", "rasva", "proteiini"]'>
+          <td>{{item}}</td>
+          <td>{{food.data[item][0] / 100 * amount | number:1}}</td>
+          <td>{{food.data[item][1]}}</td>
+        </tr>
+        <tr class="info">
+          <td colspan="3">Vitamiinit</td>
+        </tr>
+        <tr ng-repeat='item in ["C-vitamiini", "D-vitamiini"]'>
+          <td>{{item}}</td>
+          <td>{{food.data[item][0] / 100 * amount | number:1}}</td>
+          <td>{{food.data[item][1]}}</td>
+        </tr>
+      </table>
+    </div>
+    <div ng-switch-when="true">Lataa...</div>
+    <div ng-switch-default>Valitse elintarvike</div>
+  </div>
+
+  <!-- POPUP WINDOW FOR ADDING FOOD -->
+  <div modal="modalIsOpen" close="closeModal()" options="modalOptions">
+    <div class="modal-header">
+      <h4>Lisää annos</h4>
+    </div>
+    <div class="modal-body">
+      <p>{{food.name|title}}, <strong>{{amount}}g</strong></p>
+      Päivämäärä: <input type="text" ng-model="date" required pattern="(0?[1-9]|[12][0-9]|30|31)\.(0?[1-9]|1[0-2])\.\d{2,4}"/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-success" ng-click="addFood()">Lisää</button>
+      <button class="btn btn-danger" ng-click="closeModal()">Peruuta</button>
+    </div>
+  </div>
+
+</div> <!-- /.row -->
 

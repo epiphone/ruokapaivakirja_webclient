@@ -3,8 +3,8 @@
 angular.module("app.controllers", [])
 
 // Login
-.controller("LoginCtrl", function($scope, $http, $location, API, UserService) {
-    $scope.login = function(username, password) {
+.controller("LoginCtrl", function ($scope, $http, $location, API, UserService) {
+    $scope.login = function (username, password) {
         UserService.setCredentials(username, password);
         API.fetchSigned("/user/favs")
         .then(function(result){
@@ -20,7 +20,7 @@ angular.module("app.controllers", [])
             UserService.logout();
             $scope.message = "Kirjautuminen epäonnistui";
         });
-    }
+    };
 })
 
 // Index
@@ -31,11 +31,12 @@ angular.module("app.controllers", [])
 })
 
 
-// Search foods, list results
+// Search foods, list results, show food details
 .controller("FoodSearchCtrl", function($scope, $http, $timeout) {
     $scope.loading = false;
     var keyPressIndex = 0;
 
+    // Search foods, list results
     $scope.search = function(query){
         keyPressIndex++;
         if ($scope.loading || query.length < 4) {
@@ -60,15 +61,32 @@ angular.module("app.controllers", [])
                 $scope.loading = false;
             });
         }, 600);
-    }
-})
+    };
 
-// View single food
-.controller("FoodCtrl", function($scope, $http, $routeParams) {
-    var url = "http://toimiiks.cloudapp.net/api/json/foods/" + $routeParams.fid;
-    $http.get(url).success(function(data){
-        console.log(url);
-        $scope.fid = $routeParams.fid;
-        $scope.food = data.data;
-    })
+    // Show food details
+    $scope.select = function(fid){
+        $scope.isFoodLoading = true;
+        $scope.amount = 100;  // default portion size is 100g
+        var url = "http://toimiiks.cloudapp.net/api/json/foods/" + fid;
+
+        $http.get(url).success(function(response){
+            $scope.food = response.data;
+            $scope.isFoodLoading = false;
+        });
+    };
+
+    $scope.openModal = function() {
+        var date = new Date();
+        $scope.date = date.getDate() + "." + date.getMonth() + "." + date.getFullYear();
+        $scope.modalIsOpen = true;
+    };
+
+    $scope.closeModal = function() {
+        $scope.modalIsOpen = false;
+    };
+
+    $scope.modalOptions = {
+        backdropFade: true,
+        dialogFade: true
+    };
 });
