@@ -145,9 +145,6 @@ angular.module("app.services", [])
         }
         var authHeader = authParams.join(",");
 
-        console.log("baseStr=" + baseStr);
-        console.log("authHdr=" + authHeader);
-
         // Luodaan HTTP-pyyntö, palautetaan asynkroninen "lupaus":
         var options = {
             method: method,
@@ -158,7 +155,7 @@ angular.module("app.services", [])
         if (["GET", "DELETE"].indexOf(method) > -1) {
             options.params = data;
         } else {
-            options.data = data;
+            options.data = $.param(data);
         }
 
         return $http(options).then(

@@ -1,9 +1,9 @@
 
 <div class="hero-unit">
-<form>
-    Käyttäjänimi <input type="text" ng-model="username"/>
-    Salasana <input type="password" ng-model="password"/>
-    <button ng-click="login(username, password)">Kirjaudu</button>
-</form>
-{{message}}
+  <form class="form-inline">
+    <input type="text" ng-model="username" placeholder="Käyttäjänimi" autofocus/>
+    <input type="password" ng-model="password" placeholder="Salasana"/>
+    <button ng-click="login(username, password)" class="btn">Kirjaudu</button>
+  </form>
+  {{message}}
 </div>
