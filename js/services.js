@@ -1,4 +1,4 @@
-/* global CryptoJS  */
+ /* global CryptoJS */
 "use strict";
 
 /* Services */

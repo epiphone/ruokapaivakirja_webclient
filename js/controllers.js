@@ -25,38 +25,45 @@ angular.module("app.controllers", [])
 
 // Index - list bites
 .controller("IndexCtrl", function($scope, $location, API, UserService) {
+    // Initial sort order for bites
     $scope.order = "date";
     $scope.reverse = true;
 
-    var params = {
-        start: "20130101",
-        end: "20130606"
-    };
+    // Date object --> "yyyyMMdd"
+    function formatDate(d) {
+        var monthStr = (d.getMonth() + 1).toString(),
+        month = monthStr.length == 1 ? "0" + monthStr : monthStr,
+        day = d.getDate().toString().length == 1 ? "0" + d.getDate() : d.getDate();
 
+        return d.getFullYear() + month + day;
+    }
+
+    // Slider settings
     var initialDate = new Date(),
     date = {
-        year: initialDate.getYear(),
+        year: initialDate.getFullYear(),
         month: initialDate.getMonth(),
         day: initialDate.getDate()
-    };
+    },
+    sliderMaxValue = 30;
 
     // Configure slider
     $(function() {
         $("#slider").slider({
             range: true,
             min: 0,
-            max: 365,
-            values: [359, 365],
+            max: sliderMaxValue,
+            values: [sliderMaxValue-6, sliderMaxValue],
             slide: function(event, ui) {
-                $scope.slider.min = new Date(date.year, date.month, date.day - (365-ui.values[0]));
-                $scope.slider.max = new Date(date.year, date.month, date.day - (365-ui.values[1]));
+                $scope.slider.min = new Date(date.year, date.month, date.day - (sliderMaxValue-ui.values[0]));
+                $scope.slider.max = new Date(date.year, date.month, date.day - (sliderMaxValue-ui.values[1]));
                 // Values change outside Angular's $scope, so we need to call $apply manually:
                 $scope.$apply();
             }
         });
         // Initial values
         $scope.slider = {
-            min: new Date(date.year, date.month, date.day - (365-359)),
+            min: new Date(date.year, date.month, date.day - (sliderMaxValue-(sliderMaxValue-6))),
             max: new Date(date.year, date.month, date.day)
         };
     });
@@ -65,16 +72,27 @@ angular.module("app.controllers", [])
         $("#slider").slider();
     });
 
-    API.fetchSigned("/user/bites", "GET", params)
-    .then(function(result){
-        if (result.status == "success") {
-            $scope.bites = result.data;
-        } else {
-            console.log(JSON.stringify(result));
-        }
-    },function(error) {
-        console.log("ERROR=" + JSON.stringify(error));
-    });
+    $scope.getBites = function() {
+        $scope.bitesLoading = true;
+        var params = {
+            start: formatDate($scope.slider.min),
+            end: formatDate($scope.slider.max)
+        };
+
+        API.fetchSigned("/user/bites", "GET", params)
+        .then(function(result){
+            if (result.status == "success") {
+                $scope.bites = result.data;
+                $scope.bitesLoading = false;
+            } else {
+                console.log(JSON.stringify(result));
+                $scope.bitesLoading = false;
+            }
+        },function(error) {
+            console.log("ERROR=" + JSON.stringify(error));
+            $scope.bitesLoading = false;
+        });
+    };
 
     $scope.removeBite = function(biteId) {
         API.fetchSigned("/user/bites/" + biteId, "DELETE")
@@ -92,12 +110,16 @@ angular.module("app.controllers", [])
             console.log("ERROR=" + JSON.stringify(error));
         });
     };
+
+    // Load initial bites
+    $scope.getBites();
 })
 
 
 // Search foods, list results, show food details
 .controller("FoodSearchCtrl", function($scope, $http, $timeout, $window, API) {
     $scope.loading = false;
+    $scope.bite = {amount: 100};  // Initial portion size is 100g
     var keyPressIndex = 0;
 
     // Search foods, list results
@@ -115,13 +137,14 @@ angular.module("app.controllers", [])
             $scope.loading = true;
             var url = "http://toimiiks.cloudapp.net/api/json/foods?q=" + query;
             $http.get(url)
-            .success(function(data) {
-                $scope.result = data;
+            .success(function(response) {
+                $scope.results = response.data;
+                console.log("$scope.result=" + JSON.stringify($scope.results));
                 $scope.loading = false;
             })
             .error(function(data) {
                 console.log("error data=" + data);
-                $scope.result = "http error";
+                $scope.results = "http error";
                 $scope.loading = false;
             });
         }, 600);
@@ -130,54 +153,51 @@ angular.module("app.controllers", [])
     // Show food details
     $scope.select = function(fid){
         $scope.isFoodLoading = true;
-        $scope.amount = 100;  // default portion size is 100g
         var url = "http://toimiiks.cloudapp.net/api/json/foods/" + fid;
 
         $http.get(url).success(function(response){
-            console.log("$scope.amount=" + $scope.amount);
             $scope.food = response.data;
             $scope.isFoodLoading = false;
             $window.scrollTo(0, 0);
         });
     };
 
+    // Modal configuration and methods
+    $("#modal").modal({show: false});
+
     $scope.openModal = function() {
         var date = new Date();
-        console.log("$scope.amount=" + $scope.amount);
-        $scope.addStatus = undefined;
-        $scope.date = date.getDate() + "." + date.getMonth() + "." + date.getFullYear();
-        $scope.modalIsOpen = true;
+        $scope.addStatus = "started";  // started|loading|error|success
+        $scope.bite.date = date.getDate() + "." + (date.getMonth() + 1) + "." + date.getFullYear();
+        $("#modal").modal("show");
     };
 
     $scope.closeModal = function() {
-        $scope.modalIsOpen = false;
-    };
-
-    $scope.modalOptions = {
-        backdropFade: true,
-        dialogFade: true
+        $("#modal").modal("hide");
     };
 
     $scope.addFood = function() {
-        var dateParts = $scope.date.split("."),
+        // Parse date into API format (yyyyMMdd)
+        var dateParts = $scope.bite.date.split("."),
         day = dateParts[0].length == 1 ? "0" + dateParts[0] : dateParts[0],
         month = dateParts[1].length == 1 ? "0" + dateParts[1] : dateParts[1],
         year = dateParts[2].length == 2 ? "20" + dateParts[2] : dateParts[2],
+
         data = {
             fid: $scope.food["_id"],
-            amount: $scope.amount,
+            amount: $scope.bite.amount,
             date: year + month + day
         };
         $scope.addStatus = "loading";
 
         API.fetchSigned("/user/bites", "POST", data)
-        .then(function(result){
+        .then(function(result) {
             if (result.status == "success") {
                 $scope.addStatus = "success";
             } else {
                 $scope.addStatus = "error";
             }
-        },function(error) {
+        }, function(error) {
             console.log("ERROR=" + JSON.stringify(error));
             $scope.addStatus = "error";
         });
