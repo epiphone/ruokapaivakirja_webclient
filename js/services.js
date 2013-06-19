@@ -6,7 +6,7 @@
 
 angular.module("app.services", [])
 
-// Käyttäjän tiedot TODO salasanan salaus
+// Service for sharing user information between controllers
 .factory("UserService", function(HashService) {
     var username,
     password,
@@ -44,7 +44,7 @@ angular.module("app.services", [])
     };
 })
 
-// SHA1 ja HMAC-SHA1-salausfunktiot
+// SHA1 and HMAC-SHA1 hash functions
 .factory("HashService", function() {
     var replacements = "aooAOO";
 
@@ -70,7 +70,7 @@ angular.module("app.services", [])
     };
 })
 
-/* Autentikoidut HTTP-pyynnöt. */
+// Wrapper for API
 .factory("API", function (HashService, UserService, $http) {
     var appName = "sovelluksen nimi",
         appKey = "sovelluksen avain",  // TODO turha
@@ -81,7 +81,7 @@ angular.module("app.services", [])
             method = method || "GET";
             data = data || {};
 
-        // Luodaan HTTP-pyyntö, palautetaan asynkroninen "lupaus":
+        // Create a HTTP request, return a promise:
         var options = {
             method: method.toUpperCase(),
             url: urlRoot + url
@@ -93,18 +93,14 @@ angular.module("app.services", [])
             options.data = data;
         }
 
-
-        return $http(options).then(
-            function(response){
-                return response.data;
-            });
+        return $http(options);
     }
 
     function fetchSigned(url, method, data) {
         method = method || "GET";
         data = data || {};
 
-        // Kerätään parametrit allekirjoitusta varten:
+        // Collect params for the Authorization header
         url = urlRoot + url;
         method = method.toUpperCase();
         var params = {
@@ -113,8 +109,7 @@ angular.module("app.services", [])
             "timestamp": new Date().getTime().toString().substr(0, 10)
         };
 
-        // Nämä parametrit eivät tule Authorization-headeriin,
-        // niitä käytetään vain allekirjoituksessa:
+        // signatureParams are used in creating the signature
         var signatureParams = {};
         for (var a in params) {
             signatureParams[a] = params[a];
@@ -123,7 +118,7 @@ angular.module("app.services", [])
             signatureParams[b] = data[b];
         }
 
-        // Kääritään parametrit yhteen merkkijonoon allekirjoitusta varten:
+        // Wrap the parameters into a string
         var keys = Object.keys(signatureParams).sort(),
         paramPairs = [];
         for (var i in keys) {
@@ -131,21 +126,21 @@ angular.module("app.services", [])
         }
         var paramsStr = paramPairs.join("&");
 
-        // Lisätään HTTP-metodi ja URL merkkijonoon:
+        // Add HTTP method and URL into the string
         var baseStr = [escape(method), escape(url), escape(paramsStr)].join("&");
 
-        // Luodaan allekirjoitus:
+        // Use the string to create a signature
         var signingKey = appKey + "&" + UserService.getPassword();
         params["signature"] = HashService.hmac(signingKey, baseStr);
 
-        // Luodaan Authorization-header:
+        // Create the Authorization header
         var authParams = [];
         for (var key in params) {
             authParams.push(escape(key) + '="' + escape(params[key]) + '"');
         }
         var authHeader = authParams.join(",");
 
-        // Luodaan HTTP-pyyntö, palautetaan asynkroninen "lupaus":
+        // Create a HTTP request, return a promise
         var options = {
             method: method,
             url: url,
@@ -158,10 +153,7 @@ angular.module("app.services", [])
             options.data = $.param(data);
         }
 
-        return $http(options).then(
-            function(response){
-                return response.data;
-            });
+        return $http(options);
     }
 
     return {

@@ -1,22 +1,24 @@
-"use strict";
+ /* global d3 */
+ "use strict";
 
-angular.module("app.controllers", [])
+ angular.module("app.controllers", [])
 
 // Login
 .controller("LoginCtrl", function ($scope, $http, $location, API, UserService) {
     $scope.login = function (username, password) {
         UserService.setCredentials(username, password);
         API.fetchSigned("/user/favs")
-        .then(function(result){
-            if (result.status == "success") {
+        .success(function(response) {
+            if (response.status == "success") {
                 UserService.isLoggedIn(true);
                 $location.path("/");
             } else {
                 $scope.message = "Virheellinen käyttäjätunnus tai salasana";
                 UserService.logout();
             }
-        },function(error) {
-            console.log("ERROR=" + JSON.stringify(error));
+        })
+        .error(function(data) {
+            console.log("LOGIN ERROR=" + JSON.stringify(data));
             UserService.logout();
             $scope.message = "Kirjautuminen epäonnistui";
         });
@@ -80,35 +82,122 @@ angular.module("app.controllers", [])
         };
 
         API.fetchSigned("/user/bites", "GET", params)
-        .then(function(result){
-            if (result.status == "success") {
-                $scope.bites = result.data;
-                $scope.bitesLoading = false;
+        .success(function(response) {
+            if (response.status == "success") {
+                $scope.bites = response.data;
+                $scope.drawChart();
             } else {
-                console.log(JSON.stringify(result));
-                $scope.bitesLoading = false;
+                console.log("BITES ERROR=" + JSON.stringify(response));
             }
-        },function(error) {
-            console.log("ERROR=" + JSON.stringify(error));
+            $scope.bitesLoading = false;
+        })
+        .error(function(response) {
+            console.log("BITES ERROR=" + JSON.stringify(response));
             $scope.bitesLoading = false;
         });
     };
 
     $scope.removeBite = function(biteId) {
         API.fetchSigned("/user/bites/" + biteId, "DELETE")
-        .then(function(result){
-            if (result.status == "success") {
+        .success(function(response) {
+            if (response.status == "success") {
                 $scope.bites = $scope.bites.filter(function(obj) {
                     return obj["_id"] !== biteId;
                 });
             } else {
-                alert("Poistaminen epäonnistui");
-                console.log(JSON.stringify(result));
+                alert("Poistaminen epäonnistui!");
+                console.log("BITE REMOVE ERROR=" + JSON.stringify(response));
             }
-        },function(error) {
-            alert("Poistaminen epäonnistui");
-            console.log("ERROR=" + JSON.stringify(error));
+        })
+        .error(function(response) {
+            alert("Poistaminen epäonnistui!");
+            console.log("BITE REMOVE ERROR=" + JSON.stringify(response));
         });
+    };
+
+    // "yyyyMMdd" --> Date object
+    function parseDate(dt) {
+        return new Date(dt.substr(0, 4), dt.substr(4, 2) - 1, dt.substr(6, 2));
+    }
+
+    $scope.drawChart = function() {
+        $("#chart").empty();
+
+        var margin = {top:20, right:20, bottom: 30, left:50},
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+        var x = d3.time.scale()
+        .domain([$scope.slider.min, $scope.slider.max])
+        .range([0, width]);
+
+        var y = d3.scale.linear()
+        .domain([0, 4000])
+        .range([height, 0]);
+
+        var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom")
+        .ticks(d3.time.days, 1)
+        .tickFormat(d3.time.format("%d.%m"))
+        .tickPadding(5);
+
+        var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left");
+
+        var line = d3.svg.line()
+        .x(function(d) { return x(new Date(d.date)); })
+        .y(function(d) { return y(d.kcal); });
+
+        var svg = d3.select("#chart").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        // Draw axes
+        svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+        .selectAll("text")
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", "rotate(-50)");
+
+        svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Energia (kcal)");
+
+        // Group bites by date
+        var data = [];
+        for (var i in $scope.bites) {
+            var bite = $scope.bites[i],
+            foundMatch = false;
+            for (var j in data) {
+                if (data[j].date == bite.date) {
+                    data[j].kcal += bite.kcal;
+                    foundMatch = true;
+                    break;
+                }
+            }
+
+            if (!foundMatch) {
+                data.push({date: bite.date, kcal: bite.kcal});
+            }
+        }
+
+        // Draw line
+        svg.append("path")
+        .attr("d", line(data));
     };
 
     // Load initial bites
@@ -135,30 +224,50 @@ angular.module("app.controllers", [])
                 return;
             }
             $scope.loading = true;
-            var url = "http://toimiiks.cloudapp.net/api/json/foods?q=" + query;
-            $http.get(url)
+
+            API.fetch("/foods?q=" + query)
             .success(function(response) {
-                $scope.results = response.data;
-                console.log("$scope.result=" + JSON.stringify($scope.results));
+                if (response.status == "success") {
+                    $scope.results = response.data;
+                } else {
+                    console.log("FOOD QUERY ERROR=" + JSON.stringify(response));
+                }
                 $scope.loading = false;
             })
-            .error(function(data) {
-                console.log("error data=" + data);
-                $scope.results = "http error";
+            .error(function(response) {
+                console.log("FOOD QUERY ERROR=" + JSON.stringify(response));
                 $scope.loading = false;
             });
         }, 600);
     };
 
-    // Show food details
-    $scope.select = function(fid){
-        $scope.isFoodLoading = true;
-        var url = "http://toimiiks.cloudapp.net/api/json/foods/" + fid;
+    // Check whether given food is in favourites
+    $scope.foodInFavourites = function(fid) {
+        if ($scope.favourites === undefined || $scope.favourites == []) {
+            return false;
+        }
+        return $scope.favourites.some(function(obj) {
+            return obj.fid == fid;
+        });
+    };
 
-        $http.get(url).success(function(response){
-            $scope.food = response.data;
+    // Show food details
+    $scope.selectFood = function(fid){
+        $scope.isFoodLoading = true;
+
+        API.fetch("/foods/" + fid)
+        .success(function(response){
+            if (response.status == "success") {
+                $scope.food = response.data;
+                $scope.isFoodLoading = false;
+                $window.scrollTo(0, 0);
+            } else {
+                console.log("FOOD SELECT ERROR=" + JSON.stringify(response));
+            }
             $scope.isFoodLoading = false;
-            $window.scrollTo(0, 0);
+        })
+        .error(function(response) {
+            console.log("FOOD SELECT ERROR=" + JSON.stringify(response));
         });
     };
 
@@ -176,8 +285,8 @@ angular.module("app.controllers", [])
         $("#modal").modal("hide");
     };
 
-    $scope.addFood = function() {
-        // Parse date into API format (yyyyMMdd)
+    $scope.addBite = function() {
+        // Parse date into API's format (yyyyMMdd)
         var dateParts = $scope.bite.date.split("."),
         day = dateParts[0].length == 1 ? "0" + dateParts[0] : dateParts[0],
         month = dateParts[1].length == 1 ? "0" + dateParts[1] : dateParts[1],
@@ -191,15 +300,66 @@ angular.module("app.controllers", [])
         $scope.addStatus = "loading";
 
         API.fetchSigned("/user/bites", "POST", data)
-        .then(function(result) {
-            if (result.status == "success") {
+        .success(function(response) {
+            if (response.status == "success") {
                 $scope.addStatus = "success";
             } else {
                 $scope.addStatus = "error";
+                console.log("BITE ADD ERROR=" + JSON.stringify(response));
             }
-        }, function(error) {
-            console.log("ERROR=" + JSON.stringify(error));
+        })
+        .error(function(response) {
+            console.log("BITE ADD ERROR=" + JSON.stringify(response));
             $scope.addStatus = "error";
         });
     };
+
+    $scope.getFavourites = function() {
+        API.fetchSigned("/user/favs")
+        .success(function(response) {
+            if (response.status == "success") {
+                $scope.favourites = response.data;
+            } else {
+                console.log("GET FAVOURITES ERROR=" + JSON.stringify(response));
+            }
+        }).error(function(response) {
+            console.log("GET FAVOURITES ERROR=" + JSON.stringify(response.data));
+        });
+    };
+
+    $scope.addFavourite = function(fid, name) {
+        if ($scope.foodInFavourites(fid)) {
+            return;
+        }
+
+        API.fetchSigned("/user/favs/" + fid, "POST")
+        .success(function(response) {
+            if (response.status == "success") {
+                $scope.favourites.push({fid: fid, name: name});
+            } else {
+                console.log("ADD FAVOURITE ERROR=" + JSON.stringify(response));
+            }
+        })
+        .error(function(response) {
+            console.log("ADD FAVOURITE ERROR=" + JSON.stringify(response));
+        });
+    };
+
+    $scope.removeFavourite = function(fid) {
+        API.fetchSigned("/user/favs/" + fid, "DELETE")
+        .success(function(response) {
+            if (response.status == "success") {
+                $scope.favourites = $scope.favourites.filter(function(obj) {
+                    return obj.fid != fid;
+                });
+            } else {
+                console.log("REMOVE FAVOURITE ERROR=" + JSON.stringify(response));
+            }
+        })
+        .error(function(response) {
+            console.log("REMOVE FAVOURITE ERROR=" + JSON.stringify(response));
+        });
+    };
+
+    $scope.getFavourites();
 });

@@ -1,7 +1,7 @@
 <div class="row">
 
   <!-- FOOD SEARCH & RESULTS -->
-  <div class="span6">
+  <div class="span6 food-search">
     <div class="input-append">
       <input type="text" ng-model="query" ng-change="search(query)" autofocus="autofocus" placeholder="Hae elintarvikkeita">
       <button class="btn btn-primary" type="button"><i class="icon-search icon-white"></i></button>
@@ -9,9 +9,18 @@
     <div ng-show="loading">
       Lataa...
     </div>
-    <div id="results">
+    <!-- FAVOURITES -->
+    <div ng-show="favourites.length > 0" class="favourites">
+      <strong>Suosikit:</strong>
+      <div ng-repeat="fav in favourites">
+        <a href="" ng-click="selectFood(fav.fid)">{{fav.name|title}}</a>
+      </div>
+    </div>
+    <!-- SEARCH RESULTS -->
+    <div class="results">
+      <strong>Hakutulokset:</strong>
       <div ng-repeat="res in results">
-        <a href="" ng-click="select(res[0])">{{res[1]}}</a>
+        <a href="" ng-click="selectFood(res[0])">{{res[1]}}</a>
       </div>
       <div ng-show="results == []">Ei hakutuloksia</div>
     </div>
@@ -23,7 +32,11 @@
       <h3>{{food.name|title}}</h3>
 
       Annos: <input type="number" class="input-mini" ng-model="bite.amount" min="1" max="10000" required/> grammaa
-      <button class="btn btn-success" ng-click="openModal()">Lisää annos</button>
+      <div ng-switch on="foodInFavourites(food['_id'])" class="pull-right">
+        <button class="btn btn-success" ng-click="openModal()">Lisää annos <i class="icon-plus icon-white"></i></button>
+        <button  ng-switch-when="true" class="btn btn-danger" ng-click="removeFavourite(food['_id'])">Poista suosikeista <i class="icon-remove icon-white"></i></button>
+        <button  ng-switch-default class="btn btn-warning" ng-click="addFavourite(food['_id'], food.name)">Lisää suosikkeihin <i class="icon-star icon-white"></i></button>
+      </div>
       <table class="table table-hover">
         <tr class="info">
           <th>Ravintotekijä</th>
@@ -67,7 +80,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-success" ng-show="addStatus == 'started'" ng-click="addFood()">Lisää</button>
+      <button class="btn btn-success" ng-show="addStatus == 'started'" ng-click="addBite()">Lisää</button>
       <button class="btn btn-danger" ng-hide="addStatus == 'success'" ng-click="closeModal()">Peruuta</button>
       <button class="btn btn-success" ng-show="addStatus == 'success'" ng-click="closeModal()">Valmis</button>
     </div>

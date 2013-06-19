@@ -2,6 +2,11 @@
     background-color: #CDCDCD;
 }
 
+/*FOOD SEARCH PAGE*/
+.food-search .favourites {
+    background-color: #EEEEEE;
+}
+
 /* BITES PAGE*/
 
 #slider {
@@ -10,4 +15,23 @@
 
 .bites-results {
     margin-top: 30px;
+}
+
+/*LINE CHART*/
+path {
+    stroke: steelblue;
+    stroke-width: 2;
+    fill: none;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: grey;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font-size: 10px;
 }

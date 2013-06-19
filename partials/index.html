@@ -8,25 +8,28 @@
 
   <div ng-switch-when="undefined"></div>
   <div ng-switch-when="0">Ei annoksia valitulla aikavälillä.</div>
-  <table ng-switch-default class="table">
-    <tr>
-      <th ng-click="order='date'; reverse=!reverse">Päivämäärä</th>
-      <th ng-click="order='name'; reverse=!reverse">Nimi</th>
-      <th ng-click="order='amount'; reverse=!reverse">Annos (g)</th>
-      <th ng-click="order='kcal'; reverse=!reverse">Energia (kcal)</th>
-      <th ng-click="order='carbs'; reverse=!reverse">Hiilihydraatti (g)</th>
-      <th ng-click="order='fat'; reverse=!reverse">Rasva (g)</th>
-      <th ng-click="order='protein'; reverse=!reverse">Proteiini (g)</th>
-    </tr>
-    <tr ng-repeat="bite in bites|orderBy:order:reverse">
-      <td>{{bite.date|date:"d.M.yy"}}</td>
-      <td>{{bite.name|title}}</td>
-      <td>{{bite.amount}}</td>
-      <td>{{bite.kcal}}</td>
-      <td>{{bite.carbs}}</td>
-      <td>{{bite.fat}}</td>
-      <td>{{bite.protein}}</td>
-      <td><button ng-click="removeBite(bite['_id'])" class="btn btn-small btn-danger">Poista</button></td>
-    </tr>
-  </table>
+  <div id="chart"></div>
+  <div ng-switch-default>
+    <table class="table">
+      <tr>
+        <th ng-click="order='date'; reverse=!reverse">Päivämäärä</th>
+        <th ng-click="order='name'; reverse=!reverse">Nimi</th>
+        <th ng-click="order='amount'; reverse=!reverse">Annos (g)</th>
+        <th ng-click="order='kcal'; reverse=!reverse">Energia (kcal)</th>
+        <th ng-click="order='carbs'; reverse=!reverse">Hiilihydraatti (g)</th>
+        <th ng-click="order='fat'; reverse=!reverse">Rasva (g)</th>
+        <th ng-click="order='protein'; reverse=!reverse">Proteiini (g)</th>
+      </tr>
+      <tr ng-repeat="bite in bites|orderBy:order:reverse">
+        <td>{{bite.date|date:"d.M.yy"}}</td>
+        <td>{{bite.name|title}}</td>
+        <td>{{bite.amount}}</td>
+        <td>{{bite.kcal}}</td>
+        <td>{{bite.carbs}}</td>
+        <td>{{bite.fat}}</td>
+        <td>{{bite.protein}}</td>
+        <td><button ng-click="removeBite(bite['_id'])" class="btn btn-small btn-danger">Poista</button></td>
+      </tr>
+    </table>
+  </div>
 </div>
