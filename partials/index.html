@@ -1,6 +1,7 @@
 <h2>Annokset</h2>
 <strong>{{slider.min|date:"d.M.yy"}}</strong> - <strong>{{slider.max|date:"d.M.yy"}}</strong>
 <button class="btn btn-large btn-warning pull-right" ng-click="getBites()">Rajaa</button>
+<button ng-click="changeInterpolation()">{{interpolation}}</button>
 <div id="slider"></div>
 
 <div class="bites-results" ng-switch on="bites.length">
@@ -8,7 +9,7 @@
 
   <div ng-switch-when="undefined"></div>
   <div ng-switch-when="0">Ei annoksia valitulla aikavälillä.</div>
-  <div id="chart"></div>
+  <div ng-click="changeInterpolation()" linechart bind="chartData" interpolation="interpolation" style="width:100%;height:200px;"></div>
   <div ng-switch-default>
     <table class="table">
       <tr>
@@ -33,3 +34,36 @@
     </table>
   </div>
 </div>
+
+<script>
+// $(function () {
+//   "use strict";
+//   var resizeTracker;
+//   // Counteracts all transforms applied above an element.
+//   // Apply a translation to the element to have it remain at a local position
+//   var unscale = function (el) {
+//     var svg = el.ownerSVGElement.ownerSVGElement;
+//     var xf = el.scaleIndependentXForm;
+//     if (!xf) {
+//       // Keep a single transform matrix in the stack for fighting transformations
+//       xf = el.scaleIndependentXForm = svg.createSVGTransform();
+//       // Be sure to apply this transform after existing transforms (translate)
+//       el.transform.baseVal.appendItem(xf);
+//     }
+//     var m = svg.getTransformToElement(el.parentNode);
+//     m.e = m.f = 0; // Ignore (preserve) any translations done up to this point
+//     xf.setMatrix(m);
+//   };
+//   [].forEach.call($("text, .tick"), unscale);
+//   $(window).resize(function () {
+//     if (resizeTracker) clearTimeout(resizeTracker);
+//     resizeTracker = setTimeout(function () {
+//       [].forEach.call($("text, .tick"), unscale);
+//       console.log("resize");
+//     }, 100);
+//   });
+// });
+//
+
+
+</script>

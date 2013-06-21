@@ -1,4 +1,4 @@
- /* global d3 */
+ /* global d3, $, alert */
  "use strict";
 
  angular.module("app.controllers", [])
@@ -41,7 +41,7 @@
     }
 
     // Slider settings
-    var initialDate = new Date(),
+    var initialDate = new Date(new Date().toDateString()),
     date = {
         year: initialDate.getFullYear(),
         month: initialDate.getMonth(),
@@ -57,18 +57,19 @@
             max: sliderMaxValue,
             values: [sliderMaxValue-6, sliderMaxValue],
             slide: function(event, ui) {
-                $scope.slider.min = new Date(date.year, date.month, date.day - (sliderMaxValue-ui.values[0]));
-                $scope.slider.max = new Date(date.year, date.month, date.day - (sliderMaxValue-ui.values[1]));
-                // Values change outside Angular's $scope, so we need to call $apply manually:
-                $scope.$apply();
+                $scope.$apply(function() {
+                    $scope.slider.min.setTime(initialDate.getTime() - 86400000 * (sliderMaxValue-ui.values[0]));
+                    $scope.slider.max.setTime(initialDate.getTime() - 86400000 * (sliderMaxValue-ui.values[1]));
+                });
             }
         });
-        // Initial values
-        $scope.slider = {
-            min: new Date(date.year, date.month, date.day - (sliderMaxValue-(sliderMaxValue-6))),
-            max: new Date(date.year, date.month, date.day)
-        };
     });
+
+    // Initial values
+    $scope.slider = {
+        min: new Date(date.year, date.month, date.day - (sliderMaxValue-(sliderMaxValue-6))),
+        max: new Date(date.year, date.month, date.day)
+    };
 
     $(function() {
         $("#slider").slider();
@@ -119,86 +120,173 @@
     function parseDate(dt) {
         return new Date(dt.substr(0, 4), dt.substr(4, 2) - 1, dt.substr(6, 2));
     }
+    var interpolations = [
+    "linear",
+    "cardinal",
+    "monotone"];
+
+    $scope.changeInterpolation = function() {  // TODO remove
+        $scope.interpolation = interpolations.shift();
+        interpolations.push($scope.interpolation);
+    };
 
     $scope.drawChart = function() {
-        $("#chart").empty();
+        var data = {protein: [], carbs: [], fat: []},
+        bite,
+        foundMatch,
+        maxValue = 0;
 
-        var margin = {top:20, right:20, bottom: 30, left:50},
-        width = 960 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
-
-        var x = d3.time.scale()
-        .domain([$scope.slider.min, $scope.slider.max])
-        .range([0, width]);
-
-        var y = d3.scale.linear()
-        .domain([0, 4000])
-        .range([height, 0]);
-
-        var xAxis = d3.svg.axis()
-        .scale(x)
-        .orient("bottom")
-        .ticks(d3.time.days, 1)
-        .tickFormat(d3.time.format("%d.%m"))
-        .tickPadding(5);
-
-        var yAxis = d3.svg.axis()
-        .scale(y)
-        .orient("left");
-
-        var line = d3.svg.line()
-        .x(function(d) { return x(new Date(d.date)); })
-        .y(function(d) { return y(d.kcal); });
-
-        var svg = d3.select("#chart").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-        // Draw axes
-        svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis)
-        .selectAll("text")
-        .style("text-anchor", "end")
-        .attr("dx", "-.8em")
-        .attr("dy", ".15em")
-        .attr("transform", "rotate(-50)");
-
-        svg.append("g")
-        .attr("class", "y axis")
-        .call(yAxis)
-        .append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 6)
-        .attr("dy", ".71em")
-        .style("text-anchor", "end")
-        .text("Energia (kcal)");
-
-        // Group bites by date
-        var data = [];
+        // Process data
         for (var i in $scope.bites) {
-            var bite = $scope.bites[i],
+            bite = $scope.bites[i];
             foundMatch = false;
-            for (var j in data) {
-                if (data[j].date == bite.date) {
-                    data[j].kcal += bite.kcal;
+
+            for (var j in data.protein) {
+                if (data.protein[j].date == bite.date) {
+                    data.protein[j].value += bite.protein;
+                    data.carbs[j].value += bite.carbs;
+                    data.fat[j].value += bite.fat;
+
                     foundMatch = true;
                     break;
                 }
             }
 
             if (!foundMatch) {
-                data.push({date: bite.date, kcal: bite.kcal});
+                data.protein.push({date: bite.date, value: bite.protein});
+                data.fat.push({date: bite.date, value: bite.fat});
+                data.carbs.push({date: bite.date, value: bite.carbs});
             }
         }
 
-        // Draw line
-        svg.append("path")
-        .attr("d", line(data));
+        var chartData = {
+            entries: data,
+            minDate: new Date($scope.slider.min),
+            maxDate: new Date($scope.slider.max)
+        };
+        $scope.chartData = chartData;
+        // var entries = d3.entries(chartData.entries);
+
+        // var margin = {top: 20, right: 20, bottom: 30, left: 50};
+        // var sourceData, xScale, yScale, line;
+        // var prevChartWidth = 0, prevChartHeight = 0;
+        // var updateTransitionMS = 750; // milliseconds
+
+        // // SCALES
+        // xScale = d3.time.scale()
+        // .domain([chartData.minDate, chartData.maxDate]);
+
+        // yScale = d3.scale.linear()
+        // .domain([0, d3.max(entries, function(d) {
+        //     return d3.max(d.value, function(e) { return e.value; });
+        // })]);
+
+        // // LINE FUNCTION
+        // line = d3.svg.line()
+        // .x(function(d) { return xScale(new Date(d.date)); })
+        // .y(function(d) { return yScale(d.value); })
+        // .interpolate("cardinal");
+
+        // // BASE SVG ELEMENT
+        // var svg = d3.select("#chartContainer").append("svg")
+        // .attr("width", "100%")
+        // .attr("height", "100%")
+        // .append("g")
+        // .attr("class", "chartContainer")
+        // .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        // // AXES
+        // svg.append("g")
+        // .attr("class", "x axis");
+
+        // svg.append("g")
+        // .attr("class", "y axis");
+
+        // var xAxis = d3.svg.axis()
+        // .scale(xScale)
+        // .orient("bottom");
+
+        // var yAxis = d3.svg.axis()
+        // .scale(yScale)
+        // .orient("left");
+
+        // updateChart(true);
+
+        // // called for initial update and updates for resize
+        // function updateChart(init) {
+        //     // get the height and width subtracting the padding
+        //     var chartWidth = document.getElementById('chartContainer').getBoundingClientRect().width - margin.left - margin.right;
+        //     var chartHeight = document.getElementById('chartContainer').getBoundingClientRect().height - margin.top - margin.bottom;
+
+        //     // only update if chart size has changed
+        //     if ((prevChartWidth != chartWidth) || (prevChartHeight != chartHeight)) {
+        //         prevChartWidth = chartWidth;
+        //         prevChartHeight = chartHeight;
+
+        //         //set the width and height of the SVG element
+        //         svg
+        //         .attr("width", chartWidth + margin.left + margin.right)
+        //         .attr("height", chartHeight + margin.top + margin.bottom);
+
+        //         // ranges are based on the width and height available so reset
+        //         xScale.range([0, chartWidth]);
+        //         yScale.range([chartHeight, 0]);
+
+        //         if (init) {
+        //             // if first run then just display axis with no transition
+        //             svg.select(".x")
+        //             .attr("transform", "translate(0," + chartHeight + ")")
+        //             .call(xAxis);
+
+        //             svg.select(".y")
+        //             .call(yAxis);
+        //         } else {
+        //             // for subsequent updates use a transistion to animate the axis to the new position
+        //             var t = svg.transition().duration(updateTransitionMS);
+
+        //             t.select(".x")
+        //             .attr("transform", "translate(0," + chartHeight + ")")
+        //             .call(xAxis);
+
+        //             t.select(".y")
+        //             .call(yAxis);
+        //         }
+
+        //         // LINES
+        //         var lines = svg.selectAll(".line")
+        //         .data(entries);
+
+        //         // Update existing lines
+        //         lines.transition()
+        //         .duration(updateTransitionMS)
+        //         .attr("d", function(d) { return line(d.value); });
+
+        //         // Enter new lines
+        //         lines.enter().append("path")
+        //         .attr("class", function(d) { return "line " + d.key; })
+        //         .attr("d", function(d) { return line(d.value); })
+        //         .attr("stroke-dasharray", function(d) { return  "0 " + this.getTotalLength(); })
+        //         // .attr("stroke-dashoffset", function(d) { return this.getTotalLength(); })
+        //         .transition()
+        //         .duration(1000)
+        //         .ease("linear")
+        //         // .attr("stroke-dashoffset", 0);
+        //         .attr("stroke-dasharray", function(d) { return this.getTotalLength() + " " + this.getTotalLength(); });
+
+        //     }
+        // }
+
+        // // look for resize but use timer to only call the update script when a resize stops
+        // var resizeTimer;
+        // window.onresize = function(event) {
+        //     clearTimeout(resizeTimer);
+        //     resizeTimer = setTimeout(function()
+        //     {
+        //       updateChart(false);
+        //   }, 100);
+        // };
     };
+
 
     // Load initial bites
     $scope.getBites();

@@ -24,6 +24,18 @@ path {
     fill: none;
 }
 
+.line {
+    vector-effect: non-scaling-stroke;
+}
+
+g .carbs {
+    stroke: #489B3D;
+}
+
+g .fat {
+    stroke: #AA3728;
+}
+
 .axis path,
 .axis line {
     fill: none;
