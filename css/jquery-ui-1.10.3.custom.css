@@ -262,7 +262,7 @@
 	position: absolute;
 	z-index: 2;
 	width: 1.2em;
-	height: 1.2em;
+	height: 2em;
 	cursor: default;
 }
 .ui-slider .ui-slider-range {

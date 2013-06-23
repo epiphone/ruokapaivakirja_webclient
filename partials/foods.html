@@ -4,10 +4,7 @@
   <div class="span6 food-search">
     <div class="input-append">
       <input type="text" ng-model="query" ng-change="search(query)" autofocus="autofocus" placeholder="Hae elintarvikkeita">
-      <button class="btn btn-primary" type="button"><i class="icon-search icon-white"></i></button>
-    </div>
-    <div ng-show="loading">
-      Lataa...
+      <button class="btn btn-primary" type="button"><i ng-class="queryLoading ? 'icon-refresh icon-spin' : 'icon-search'" class="icon-white"></i></button>
     </div>
     <!-- FAVOURITES -->
     <div ng-show="favourites.length > 0" class="favourites">
@@ -34,8 +31,8 @@
       Annos: <input type="number" class="input-mini" ng-model="bite.amount" min="1" max="10000" required/> grammaa
       <div ng-switch on="foodInFavourites(food['_id'])" class="pull-right">
         <button class="btn btn-success" ng-click="openModal()">Lisää annos <i class="icon-plus icon-white"></i></button>
-        <button  ng-switch-when="true" class="btn btn-danger" ng-click="removeFavourite(food['_id'])">Poista suosikeista <i class="icon-remove icon-white"></i></button>
-        <button  ng-switch-default class="btn btn-warning" ng-click="addFavourite(food['_id'], food.name)">Lisää suosikkeihin <i class="icon-star icon-white"></i></button>
+        <button  ng-switch-when="true" class="btn btn-danger" ng-click="removeFavourite(food['_id'])">Poista suosikeista <i ng-class="favouriteLoading ? 'icon-refresh icon-spin' : 'icon-remove'" class="icon-white"></i></button>
+        <button  ng-switch-default class="btn btn-warning" ng-click="addFavourite(food['_id'], food.name)">Lisää suosikkeihin <i ng-class="favouriteLoading ? 'icon-refresh icon-spin' : 'icon-star'" class="icon-white"></i></button>
       </div>
       <table class="table table-hover">
         <tr class="info">
@@ -81,7 +78,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-success" ng-show="addStatus == 'started'" ng-click="addBite()">Lisää</button>
-      <button class="btn btn-danger" ng-hide="addStatus == 'success'" ng-click="closeModal()">Peruuta</button>
+      <button class="btn btn-danger" ng-hide="addStatus == 'success'" ng-click="closeModal()">Peruuta <i ng-show="addStatus == 'loading'" class="icon-refresh icon-spin"></i></button>
       <button class="btn btn-success" ng-show="addStatus == 'success'" ng-click="closeModal()">Valmis</button>
     </div>
   </div>

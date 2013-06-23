@@ -1,69 +1,77 @@
-<h2>Annokset</h2>
-<strong>{{slider.min|date:"d.M.yy"}}</strong> - <strong>{{slider.max|date:"d.M.yy"}}</strong>
-<button class="btn btn-large btn-warning pull-right" ng-click="getBites()">Rajaa</button>
-<button ng-click="changeInterpolation()">{{interpolation}}</button>
-<div id="slider"></div>
+<div class="row">
+  <div class="span12">
 
-<div class="bites-results" ng-switch on="bites.length">
-  <div ng-show="bitesLoading">Lataa annoksia...</div>
-
-  <div ng-switch-when="undefined"></div>
-  <div ng-switch-when="0">Ei annoksia valitulla aikavälillä.</div>
-  <div ng-click="changeInterpolation()" linechart bind="chartData" interpolation="interpolation" style="width:100%;height:200px;"></div>
-  <div ng-switch-default>
-    <table class="table">
-      <tr>
-        <th ng-click="order='date'; reverse=!reverse">Päivämäärä</th>
-        <th ng-click="order='name'; reverse=!reverse">Nimi</th>
-        <th ng-click="order='amount'; reverse=!reverse">Annos (g)</th>
-        <th ng-click="order='kcal'; reverse=!reverse">Energia (kcal)</th>
-        <th ng-click="order='carbs'; reverse=!reverse">Hiilihydraatti (g)</th>
-        <th ng-click="order='fat'; reverse=!reverse">Rasva (g)</th>
-        <th ng-click="order='protein'; reverse=!reverse">Proteiini (g)</th>
-      </tr>
-      <tr ng-repeat="bite in bites|orderBy:order:reverse">
-        <td>{{bite.date|date:"d.M.yy"}}</td>
-        <td>{{bite.name|title}}</td>
-        <td>{{bite.amount}}</td>
-        <td>{{bite.kcal}}</td>
-        <td>{{bite.carbs}}</td>
-        <td>{{bite.fat}}</td>
-        <td>{{bite.protein}}</td>
-        <td><button ng-click="removeBite(bite['_id'])" class="btn btn-small btn-danger">Poista</button></td>
-      </tr>
-    </table>
-  </div>
-</div>
-
-<script>
-// $(function () {
-//   "use strict";
-//   var resizeTracker;
-//   // Counteracts all transforms applied above an element.
-//   // Apply a translation to the element to have it remain at a local position
-//   var unscale = function (el) {
-//     var svg = el.ownerSVGElement.ownerSVGElement;
-//     var xf = el.scaleIndependentXForm;
-//     if (!xf) {
-//       // Keep a single transform matrix in the stack for fighting transformations
-//       xf = el.scaleIndependentXForm = svg.createSVGTransform();
-//       // Be sure to apply this transform after existing transforms (translate)
-//       el.transform.baseVal.appendItem(xf);
-//     }
-//     var m = svg.getTransformToElement(el.parentNode);
-//     m.e = m.f = 0; // Ignore (preserve) any translations done up to this point
-//     xf.setMatrix(m);
-//   };
-//   [].forEach.call($("text, .tick"), unscale);
-//   $(window).resize(function () {
-//     if (resizeTracker) clearTimeout(resizeTracker);
-//     resizeTracker = setTimeout(function () {
-//       [].forEach.call($("text, .tick"), unscale);
-//       console.log("resize");
-//     }, 100);
-//   });
-// });
-//
+    <div slider bind="slider" days="30" id="slider" style="width:75%;float:left;"></div>
+    <button ng-class="{disabled:bitesLoading}" class="btn btn-large btn-warning btn-slider" ng-click="getBites()">Rajaa <i ng-show="bitesLoading" class="icon icon-refresh icon-spin"></i></button>
 
 
-</script>
+    <div ng-switch on="bitesByDate.length">
+      <div ng-switch-when="0" class="alert alert-error">Ei annoksia valitulla aikavälillä.</div>
+      <div ng-switch-default>
+        <!-- Chart -->
+        <div linechart bind="chartData" interpolation="linear" style="width:100%;height:300px;"></div>
+        <div class="chart-info">
+          <small>Hiilihydraatti </small><span class="badge badge-success">  </span>
+          <small>Rasva </small><span class="badge badge-important"> </span>
+          <small>Proteiini </small><span class="badge badge-info"> </span>
+          <span class="pull-right"><small>Energia </small><span class="badge badge-info"> </span></span>
+        </div>
+
+
+        <ul class="nav nav-tabs">
+          <li ng-click="secondTabSelected = false" ng-class="{active:!secondTabSelected}"><a href="">Päivät</a>
+          </li>
+          <li ng-click="secondTabSelected = true" ng-class="{active:secondTabSelected}"><a href="">Annokset</a></li>
+        </ul>
+        <!-- List of dates in the selected date range -->
+        <div ng-show="!secondTabSelected">
+          <table class="table">
+            <tr>
+              <th ng-click="datesOrder='date'; datesReverse=!datesReverse">Pvm <i class="icon" ng-class="{hidden:datesOrder != 'date', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
+              <th ng-click="datesOrder='bites.length'; datesReverse=!datesReverse">Annoksia <i class="icon" ng-class="{hidden:datesOrder != 'bites.length', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
+              <th ng-click="datesOrder='kcal'; datesReverse=!datesReverse">Energia <small>kcal</small> <i class="icon" ng-class="{hidden:datesOrder != 'kcal', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
+              <th ng-click="datesOrder='carbs'; datesReverse=!datesReverse">Hiilihydraatti <small>g</small> <i class="icon" ng-class="{hidden:datesOrder != 'carbs', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
+              <th ng-click="datesOrder='fat'; datesReverse=!datesReverse">Rasva <small>g</small> <i class="icon" ng-class="{hidden:datesOrder != 'fat', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
+              <th ng-click="datesOrder='protein'; datesReverse=!datesReverse">Proteiini <small>g</small> <i class="icon" ng-class="{hidden:datesOrder != 'protein', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
+            </tr>
+            <tr ng-repeat="item in bitesByDate|orderBy:datesOrder:datesReverse">
+              <td>{{item.date|date:"d.M.yy"}}</td>
+              <td>{{item.bites.length}}</td>
+              <td>{{item.kcal}}</td>
+              <td>{{item.carbs}}</td>
+              <td>{{item.fat}}</td>
+              <td>{{item.protein}}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- List of all bites in the selected date range -->
+        <div ng-show="secondTabSelected">
+          <table class="table">
+            <tr>
+              <th ng-click="bitesOrder='date'; bitesReverse = !bitesReverse">Pvm <i class="icon" ng-class="{hidden:bitesOrder != 'date', 'icon-arrow-down':bitesReverse, 'icon-arrow-up':!bitesReverse}"></i></th>
+              <th ng-click="bitesOrder='name'; bitesReverse = !bitesReverse">Nimi <i class="icon" ng-class="{hidden:bitesOrder != 'name', 'icon-arrow-down':bitesReverse, 'icon-arrow-up':!bitesReverse}"></i></th>
+              <th ng-click="bitesOrder='amount'; bitesReverse = !bitesReverse">Määrä <small>g</small> <i class="icon" ng-class="{hidden:bitesOrder != 'amount', 'icon-arrow-down':bitesReverse, 'icon-arrow-up':!bitesReverse}"></i></th>
+              <th ng-click="bitesOrder='kcal'; bitesReverse = !bitesReverse">Energia <small>kcal</small> <i class="icon" ng-class="{hidden:bitesOrder != 'kcal', 'icon-arrow-down':bitesReverse, 'icon-arrow-up':!bitesReverse}"></i></th>
+              <th ng-click="bitesOrder='carbs'; bitesReverse = !bitesReverse">Hiilihydraatti <small>g</small> <i class="icon" ng-class="{hidden:bitesOrder != 'carbs', 'icon-arrow-down':bitesReverse, 'icon-arrow-up':!bitesReverse}"></i></th>
+              <th ng-click="bitesOrder='fat'; bitesReverse = !bitesReverse">Rasva <small>g</small> <i class="icon" ng-class="{hidden:bitesOrder != 'fat', 'icon-arrow-down':bitesReverse, 'icon-arrow-up':!bitesReverse}"></i></th>
+              <th ng-click="bitesOrder='protein'; bitesReverse = !bitesReverse">Proteiini <small>g</small> <i class="icon" ng-class="{hidden:bitesOrder != 'protein', 'icon-arrow-down':bitesReverse, 'icon-arrow-up':!bitesReverse}"></i></th>
+              <th></th>
+            </tr>
+            <tr ng-repeat="bite in bites|orderBy:bitesOrder:bitesReverse">
+              <td>{{bite.date|date:"d.M.yy"}}</td>
+              <td>{{bite.name|title}}</td>
+              <td>{{bite.amount}}</td>
+              <td>{{bite.kcal}}</td>
+              <td>{{bite.carbs}}</td>
+              <td>{{bite.fat}}</td>
+              <td>{{bite.protein}}</td>
+              <td><button ng-class="{disabled:bite.loading}" ng-click="removeBite(bite)" class="btn btn-small btn-danger">Poista <i ng-show="bite.loading" class="icon-refresh icon-spin"></i></button></td>
+            </tr>
+          </table>
+        </div>
+      </div> <!-- /ng-switch-default -->
+    </div> <!-- /ng-switch -->
+
+  </div> <!-- /.span12 -->
+</div> <!-- /.row -->

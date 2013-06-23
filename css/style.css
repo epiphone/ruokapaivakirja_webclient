@@ -1,38 +1,76 @@
-.row-header {
-    background-color: #CDCDCD;
-}
-
-/*FOOD SEARCH PAGE*/
+/* FOOD SEARCH PAGE */
 .food-search .favourites {
     background-color: #EEEEEE;
 }
 
-/* BITES PAGE*/
+/* BITES PAGE */
 
 #slider {
-    margin-top: 30px;
+    width: 75%;
+    float: left;
+    margin: 40px 20px 20px 35px;
 }
 
-.bites-results {
-    margin-top: 30px;
+.btn-slider {
+    margin-top: 29px;
 }
 
-/*LINE CHART*/
+.handle-tooltip {
+    position: absolute;
+    z-index: 1020;
+    display: block;
+    padding: 5px;
+    font-size: 11px;
+    visibility: visible;
+    margin-top: -2px;
+    bottom:120%;
+    margin-left: -1.9em;
+}
+
+.ui-slider a {
+    outline: none;
+}
+
+.handle-tooltip-arrow {
+    bottom: 0;
+    left: 50%;
+    margin-left: -5px;
+    border-top: 5px solid #000000;
+    border-right: 5px solid transparent;
+    border-left: 5px solid transparent;
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+
+.handle-tooltip-inner {
+    max-width: 200px;
+    padding: 3px 8px;
+    color: #ffffff;
+    text-align: center;
+    text-decoration: none;
+    background-color: #000000;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+.chart-info {
+    margin: 0 40px 40px 40px;
+}
+
+/* LINE CHART */
 path {
     stroke: steelblue;
     stroke-width: 2;
     fill: none;
 }
 
-.line {
-    vector-effect: non-scaling-stroke;
-}
-
-g .carbs {
+path.carbs {
     stroke: #489B3D;
 }
 
-g .fat {
+path.fat {
     stroke: #AA3728;
 }
 
@@ -46,4 +84,10 @@ g .fat {
 
 .axis text {
     font-size: 10px;
+}
+
+.area.fill {
+    stroke: none;
+    fill: #e5f3f9;
+    fill-opacity: 0.5;
 }

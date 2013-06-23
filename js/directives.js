@@ -1,4 +1,4 @@
-/*global d3*/
+/*global d3, $*/
 "use strict";
 
 /* Directives */
@@ -7,38 +7,74 @@
 angular.module("app.directives", [])
 
 /**
- * Directive for creating responsive linecharts.
- * Based on dangle.js (https://github.com/fullscale/dangle)
- *
- * Usage: <html>...<linechart bind="data" />
- * The chart will listen for the binded variable in the current scope
- * and update accordingly.
- * Example data:
- * data = {minDate: Date, maxDate: Date, lines: [line1, line2]}, where
- * line1 = {class: "line-red", domain: [0, 100], entries: entries1}, where
- * entries1 = [{date: myDate1, value: 200}, {date: myDate2, value: 200}]
+ * Slider with two handles and a date range.
+ * When handles are moved, "min" and "max" properties of the bound object
+ * change accordingly.
  */
- .directive("linechart", function($window) {
+ .directive("slider", function($compile) {
     return {
         restrict: "A",
 
         scope: {
-            width:       "=",
-            height:      "=",
-            bind:        "=",
+            bind:       "=",
+            maxValue:   "@"
+        },
+
+        link: function(scope, element, attrs) {
+            var maxValue = scope.maxValue || 30;
+            var today = new Date(new Date().toDateString());
+            var min = maxValue - (today.getDate() - scope.bind.min.getDate());
+            var max = maxValue - (today.getDate() - scope.bind.max.getDate());
+
+            $(element[0]).slider({
+                range: true,
+                min: 0,
+                max: maxValue,
+                values: [min, max],
+                slide: function(event, ui) {
+                    scope.$apply(function() {
+                        scope.bind.min.setTime(today.getTime() - 86400000 * (maxValue-ui.values[0]));
+                        scope.bind.max.setTime(today.getTime() - 86400000 * (maxValue-ui.values[1]));
+                    });
+                }
+            });
+            var html = "<div class='handle-tooltip'><div class='handle-tooltip-arrow'>" +
+            "</div><div class='handle-tooltip-inner'></div></div>";
+            $(element[0]).children(".ui-slider-handle").html(html);
+            $(".handle-tooltip-inner:eq(0)").html($compile("<span>{{bind.min|date:'d.M.yy'}}</span>")(scope));
+            $(".handle-tooltip-inner:eq(1)").html($compile("<span>{{bind.max|date:'d.M.yy'}}</span>")(scope));
+
+
+
+
+            // $compile(element.contents())(scope);
+        }
+    };
+})
+
+
+/**
+ * A responsive linechart with multiple lines and an area.
+ * Usage: <div linechart bind="data" interpolation="linear"></div>
+ */
+ .directive("linechart", function($window) {
+    return {
+        restrict: "A",  // directive is defined as an attribute to an element
+
+        scope: {
+            bind:          "=",
             interpolation: "="
         },
 
         link: function(scope, element, attrs) {
             var data = null;
-            var margin = {top: 20, right: 20, bottom: 30, left: 30};
-            var prevWidth = 0;
-            var prevHeight = 0;
+            var margin = {top: 20, right: 40, bottom: 30, left: 40};
             var parseDate = d3.time.format("%Y-%m-%dT%H:%M:%S").parse;
 
             // Create scales
             var x = d3.time.scale();
             var y = d3.scale.linear();
+            var yKcal = d3.scale.linear();
 
             // Create axes
             var xAxis = d3.svg.axis()
@@ -47,17 +83,27 @@ angular.module("app.directives", [])
             .ticks(d3.time.days, 1)
             .tickFormat(d3.time.format("%-d.%-m"));
 
-            var yAxis = d3.svg.axis()
+            var yLeftAxis = d3.svg.axis()
             .scale(y)
-            .orient("left");
+            .orient("left")
+            .ticks(6);
 
-            // Create line generator
+            var yRightAxis = d3.svg.axis()
+            .scale(yKcal)
+            .orient("right")
+            .ticks(6);
+
+            // Create line & area generators
             var line = d3.svg.line()
             .x(function(d) { return x(parseDate(d.date)); })
             .y(function(d) { return y(d.value); })
-            .interpolate("cardinal");
+            .interpolate(attrs.interpolation ? attrs.interpolation : "linear");
 
-            // ROOT SVG ELEMENT
+            var area = d3.svg.area()
+            .x(function(d) { return x(parseDate(d.date)); })
+            .y1(function(d) { return yKcal(d.value); });
+
+            // Append root svg element
             var svg = d3.select(element[0])
             .append("svg")
             .attr("width", "100%")
@@ -66,53 +112,40 @@ angular.module("app.directives", [])
             .attr("class", "chartContainer")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-            // insert the x axis (no data yet)
+            // Append the axes
             svg.append("g")
             .attr("class", "x axis");
 
             svg.append("g")
-            .attr("class", "y axis");
+            .attr("class", "y left axis");
 
-            // svg.append("g")
-            // .attr("class", "x axis")
-            // .attr("transform", "translate(0," + height + ")")
-            // .call(xAxis);
+            svg.append("g")
+            .attr("class", "y right axis");
 
-            // // insert the x axis (no data yet)
-            // svg.append("g")
-            // .attr("class", "area y axis " + klass)
-            // .call(yAxis)
-            // .append("text")
-            // .attr("transform", "rotate(-90)")
-            // .attr("y", 6)
-            // .attr("dy", ".71em")
-            // .style("text-anchor", "end")
-            // .text(label);
+            // Append the axis labels
+            svg.append("text")
+            .attr("x", 10)
+            .attr("y", 10)
+            .attr("class", "axis-label y left")
+            .style("text-anchor", "middle")
+            .style("display", "none")
+            .text("g");
 
-            // generate the line. Data is empty at link time
-            // svg.append("path")
-            // .datum([])
-            // .attr("class", function(d){ return "line " + d.key; })
-            // .attr("d", function(d){ return line(d.value); })
-            // .attr("stroke", function(d) { return "green"; });
+            svg.append("text")
+            .attr("class", "axis-label y right")
+            .attr("x", -20)
+            .attr("y", 10)
+            .style("text-anchor", "middle")
+            .style("display", "none")
+            .text("kcal");
 
-            // this is called when the bound data changes
+            // This is called when the bound data changes...
             scope.$watch("bind", function(newData) {
                 data = newData;
                 update(true);
             }, true);
 
-            scope.$watch("interpolation", function(newData) {
-                if (!newData) { return; }
-                line.interpolate(newData);
-
-                svg.selectAll(".line")
-                .data(d3.entries(data.entries))
-                .transition()
-                .duration(750)
-                .attr("d", function(d) { return line(d.value); });
-            });
-
+            // ...and this when the window is resized
             var resizeTimer;
             angular.element($window).bind("resize", function() {
                 clearTimeout(resizeTimer);
@@ -121,75 +154,101 @@ angular.module("app.directives", [])
                 }, 100);
             });
 
+            /** Resets the chart data, resizes the chart */
             function update(init) {
                 if (!data) {
                     return;
                 }
-                console.log(data);
+
+                // Parse new data
                 var entries = d3.entries(data.entries);
+                var entriesWithoutKcal = entries.filter(function(d) { return d.key != "kcal"; });
+
+                // Read container size, update chart size accordingly
                 var chartWidth = element[0].getBoundingClientRect().width - margin.left - margin.right;
                 var chartHeight = element[0].getBoundingClientRect().height - margin.top - margin.bottom;
 
-                // use that data to build valid x,y ranges
                 x.domain([data.minDate, data.maxDate])
                 .range([0, chartWidth]);
 
-                y.domain([0, d3.max(entries, function(d) {
+                y.domain([0, d3.max(entriesWithoutKcal, function(d) {
                     return d3.max(d.value, function(e) { return e.value; });
+                })])
+                .range([chartHeight, 0]);
+
+                yKcal.domain([0, d3.max(data.entries.kcal, function(d) {
+                    return d.value;
                 })])
                 .range([chartHeight, 0]);
 
                 svg.attr("width", chartWidth + margin.left + margin.right)
                 .attr("height", chartHeight + margin.top + margin.bottom);
 
+                // If updating chart, animate the axes, otherwise just enter
                 var t = init ? svg : svg.transition().duration(750);
 
+
+                // AXES
                 t.select(".x")
                 .attr("transform", "translate(0," + chartHeight + ")")
                 .call(xAxis);
 
-                t.select(".y")
-                .call(yAxis);
+                t.select(".y.left")
+                .call(yLeftAxis);
 
-                // Create lines
+                t.select(".y.right")
+                .attr("transform", "translate(" + chartWidth + ",0)")
+                .call(yRightAxis);
+
+
+                // AXIS LABELS
+                t.select(".axis-label.right")
+                .attr("transform", "translate(" + chartWidth + ",0)");
+
+                t.selectAll(".axis-label")
+                .style("display", "block");
+
+
+                // AREA
+                area.y0(chartHeight);
+                var areas = svg.selectAll(".area")
+                .data([data.entries.kcal]);
+
+                areas.transition()
+                .duration(750)
+                .attr("d", area);
+
+                areas.enter().append("path")
+                .attr("class", "area fill")
+                .attr("d", area)
+                .attr("transform", "translate(0," + chartHeight + "), scale(1, 0)")
+                .transition()
+                .duration(2000)
+                .ease("elastic")
+                .attr("transform", "translate(0, 0), scale(1, 1)");
+
+
+                // LINES
                 var lines = svg.selectAll(".line")
-                .data(entries);
+                .data(entriesWithoutKcal);
 
-                // Update existing lines
-                lines
-                .attr("stroke-dasharray", "none")
+                lines.attr("stroke-dasharray", "none")
                 .transition()
                 .duration(750)
                 .attr("d", function(d) { return line(d.value); });
 
-                // Enter new lines
                 lines.enter().append("path")
                 .attr("class", function(d) { return "line " + d.key; })
                 .attr("d", function(d) { return line(d.value); })
                 .attr("stroke-dasharray", function(d) { return  "0 " + this.getTotalLength(); })
                 .transition()
                 .duration(1000)
-                .ease("linear")
+                .delay(function(d, i) { return i * 100; })
                 .attr("stroke-dasharray", function(d) { return this.getTotalLength() + " " + this.getTotalLength(); });
-
-                // create the transition
-                // var t = svg.transition().duration(duration);
-
-                // feed the current data to our area/line generators
-                // t.selectAll(".line").attr("d", line(entries));
-                // svg.selectAll(".line").attr("d", function(d) { return line(d.value); });
-
-                // svg.selectAll(".line")
-                // .data(entries)
-                // .enter().append("path")
-                // .attr("class", function(d){ return "line " + d.key; })
-                // .attr("d", function(d){ return line(d.value); });
-
-                // update our x,y axis based on new data values
-                // t.select(".x").call(xAxis);
-                // t.select(".y").call(yAxis);
-
             }
+
+            svg.selectAll("text")
+            .style("visibility", "visible");
         }
     };
 });

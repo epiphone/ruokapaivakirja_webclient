@@ -5,7 +5,10 @@
 
 // Login
 .controller("LoginCtrl", function ($scope, $http, $location, API, UserService) {
+    $scope.loginTabSelected = true;
+
     $scope.login = function (username, password) {
+        $scope.loading = true;
         UserService.setCredentials(username, password);
         API.fetchSigned("/user/favs")
         .success(function(response) {
@@ -15,12 +18,14 @@
             } else {
                 $scope.message = "Virheellinen käyttäjätunnus tai salasana";
                 UserService.logout();
+                $scope.loading = false;
             }
         })
         .error(function(data) {
             console.log("LOGIN ERROR=" + JSON.stringify(data));
             UserService.logout();
             $scope.message = "Kirjautuminen epäonnistui";
+            $scope.loading = false;
         });
     };
 })
@@ -40,42 +45,18 @@
         return d.getFullYear() + month + day;
     }
 
-    // Slider settings
-    var initialDate = new Date(new Date().toDateString()),
-    date = {
-        year: initialDate.getFullYear(),
-        month: initialDate.getMonth(),
-        day: initialDate.getDate()
-    },
-    sliderMaxValue = 30;
-
-    // Configure slider
-    $(function() {
-        $("#slider").slider({
-            range: true,
-            min: 0,
-            max: sliderMaxValue,
-            values: [sliderMaxValue-6, sliderMaxValue],
-            slide: function(event, ui) {
-                $scope.$apply(function() {
-                    $scope.slider.min.setTime(initialDate.getTime() - 86400000 * (sliderMaxValue-ui.values[0]));
-                    $scope.slider.max.setTime(initialDate.getTime() - 86400000 * (sliderMaxValue-ui.values[1]));
-                });
-            }
-        });
-    });
-
-    // Initial values
+    // Set slider handles' initial positions
+    var today = new Date();
     $scope.slider = {
-        min: new Date(date.year, date.month, date.day - (sliderMaxValue-(sliderMaxValue-6))),
-        max: new Date(date.year, date.month, date.day)
+        min: new Date(today.getFullYear(), today.getMonth(), today.getDate() -15),
+        max: new Date(today.getFullYear(), today.getMonth(), today.getDate())
     };
 
-    $(function() {
-        $("#slider").slider();
-    });
-
     $scope.getBites = function() {
+        if (!$scope.slider) {
+            console.log("slider undefined");
+            return;
+        }
         $scope.bitesLoading = true;
         var params = {
             start: formatDate($scope.slider.min),
@@ -86,7 +67,10 @@
         .success(function(response) {
             if (response.status == "success") {
                 $scope.bites = response.data;
-                $scope.drawChart();
+                $scope.bitesOrder = "date"; // Reset table order
+                $scope.datesOrder = "date";
+                processBitesData();
+                updateChart();
             } else {
                 console.log("BITES ERROR=" + JSON.stringify(response));
             }
@@ -98,21 +82,69 @@
         });
     };
 
-    $scope.removeBite = function(biteId) {
+    function processBitesData() {  // TODO remove redundant processing
+        if (!$scope.bites) {
+            $scope.bitesByDate = null;
+        }
+
+        // Group bites by date
+        var bites = $scope.bites,
+        bite,
+        biteAdded,
+        data = [],
+        attrs = ["kcal", "protein", "fat", "carbs"];  // TODO into global variable?
+
+        for (var i in bites) {
+            bite = bites[i];
+
+            // If array already has an item with the same date, extend the item...
+            biteAdded = false;
+            for (var j in data) {
+                if (data[j].date == bite.date) {
+                    data[j].bites.push(bite);
+                    for (var attrIndex in attrs) {
+                        data[j][attrs[attrIndex]] += bite[[attrs[attrIndex]]];
+                    }
+                    biteAdded = true;
+                }
+            }
+
+            // ...otherwise push a new item
+            if (!biteAdded) {
+                data.push({
+                    date: bite.date,
+                    bites: [bite],
+                    kcal: bite.kcal,
+                    protein: bite.protein,
+                    fat: bite.fat,
+                    carbs: bite.fat
+                });
+            }
+        }
+
+        $scope.bitesByDate = data;
+        $scope.selectedItem = data[0];
+    }
+
+    $scope.removeBite = function(bite) {
+        bite.loading = true;
+        var biteId = bite["_id"];
         API.fetchSigned("/user/bites/" + biteId, "DELETE")
         .success(function(response) {
             if (response.status == "success") {
-                $scope.bites = $scope.bites.filter(function(obj) {
-                    return obj["_id"] !== biteId;
-                });
+                $scope.bites.splice($scope.bites.indexOf(bite), 1);
+                processBitesData();
+                updateChart();
             } else {
                 alert("Poistaminen epäonnistui!");
                 console.log("BITE REMOVE ERROR=" + JSON.stringify(response));
+                bite.loading = false;
             }
         })
         .error(function(response) {
             alert("Poistaminen epäonnistui!");
             console.log("BITE REMOVE ERROR=" + JSON.stringify(response));
+            bite.loading = false;
         });
     };
 
@@ -120,18 +152,9 @@
     function parseDate(dt) {
         return new Date(dt.substr(0, 4), dt.substr(4, 2) - 1, dt.substr(6, 2));
     }
-    var interpolations = [
-    "linear",
-    "cardinal",
-    "monotone"];
 
-    $scope.changeInterpolation = function() {  // TODO remove
-        $scope.interpolation = interpolations.shift();
-        interpolations.push($scope.interpolation);
-    };
-
-    $scope.drawChart = function() {
-        var data = {protein: [], carbs: [], fat: []},
+    function updateChart() {
+        var data = {protein: [], carbs: [], fat: [], kcal: []},
         bite,
         foundMatch,
         maxValue = 0;
@@ -146,6 +169,7 @@
                     data.protein[j].value += bite.protein;
                     data.carbs[j].value += bite.carbs;
                     data.fat[j].value += bite.fat;
+                    data.kcal[j].value += bite.kcal;
 
                     foundMatch = true;
                     break;
@@ -156,6 +180,7 @@
                 data.protein.push({date: bite.date, value: bite.protein});
                 data.fat.push({date: bite.date, value: bite.fat});
                 data.carbs.push({date: bite.date, value: bite.carbs});
+                data.kcal.push({date: bite.date, value: bite.kcal});
             }
         }
 
@@ -165,128 +190,7 @@
             maxDate: new Date($scope.slider.max)
         };
         $scope.chartData = chartData;
-        // var entries = d3.entries(chartData.entries);
-
-        // var margin = {top: 20, right: 20, bottom: 30, left: 50};
-        // var sourceData, xScale, yScale, line;
-        // var prevChartWidth = 0, prevChartHeight = 0;
-        // var updateTransitionMS = 750; // milliseconds
-
-        // // SCALES
-        // xScale = d3.time.scale()
-        // .domain([chartData.minDate, chartData.maxDate]);
-
-        // yScale = d3.scale.linear()
-        // .domain([0, d3.max(entries, function(d) {
-        //     return d3.max(d.value, function(e) { return e.value; });
-        // })]);
-
-        // // LINE FUNCTION
-        // line = d3.svg.line()
-        // .x(function(d) { return xScale(new Date(d.date)); })
-        // .y(function(d) { return yScale(d.value); })
-        // .interpolate("cardinal");
-
-        // // BASE SVG ELEMENT
-        // var svg = d3.select("#chartContainer").append("svg")
-        // .attr("width", "100%")
-        // .attr("height", "100%")
-        // .append("g")
-        // .attr("class", "chartContainer")
-        // .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-        // // AXES
-        // svg.append("g")
-        // .attr("class", "x axis");
-
-        // svg.append("g")
-        // .attr("class", "y axis");
-
-        // var xAxis = d3.svg.axis()
-        // .scale(xScale)
-        // .orient("bottom");
-
-        // var yAxis = d3.svg.axis()
-        // .scale(yScale)
-        // .orient("left");
-
-        // updateChart(true);
-
-        // // called for initial update and updates for resize
-        // function updateChart(init) {
-        //     // get the height and width subtracting the padding
-        //     var chartWidth = document.getElementById('chartContainer').getBoundingClientRect().width - margin.left - margin.right;
-        //     var chartHeight = document.getElementById('chartContainer').getBoundingClientRect().height - margin.top - margin.bottom;
-
-        //     // only update if chart size has changed
-        //     if ((prevChartWidth != chartWidth) || (prevChartHeight != chartHeight)) {
-        //         prevChartWidth = chartWidth;
-        //         prevChartHeight = chartHeight;
-
-        //         //set the width and height of the SVG element
-        //         svg
-        //         .attr("width", chartWidth + margin.left + margin.right)
-        //         .attr("height", chartHeight + margin.top + margin.bottom);
-
-        //         // ranges are based on the width and height available so reset
-        //         xScale.range([0, chartWidth]);
-        //         yScale.range([chartHeight, 0]);
-
-        //         if (init) {
-        //             // if first run then just display axis with no transition
-        //             svg.select(".x")
-        //             .attr("transform", "translate(0," + chartHeight + ")")
-        //             .call(xAxis);
-
-        //             svg.select(".y")
-        //             .call(yAxis);
-        //         } else {
-        //             // for subsequent updates use a transistion to animate the axis to the new position
-        //             var t = svg.transition().duration(updateTransitionMS);
-
-        //             t.select(".x")
-        //             .attr("transform", "translate(0," + chartHeight + ")")
-        //             .call(xAxis);
-
-        //             t.select(".y")
-        //             .call(yAxis);
-        //         }
-
-        //         // LINES
-        //         var lines = svg.selectAll(".line")
-        //         .data(entries);
-
-        //         // Update existing lines
-        //         lines.transition()
-        //         .duration(updateTransitionMS)
-        //         .attr("d", function(d) { return line(d.value); });
-
-        //         // Enter new lines
-        //         lines.enter().append("path")
-        //         .attr("class", function(d) { return "line " + d.key; })
-        //         .attr("d", function(d) { return line(d.value); })
-        //         .attr("stroke-dasharray", function(d) { return  "0 " + this.getTotalLength(); })
-        //         // .attr("stroke-dashoffset", function(d) { return this.getTotalLength(); })
-        //         .transition()
-        //         .duration(1000)
-        //         .ease("linear")
-        //         // .attr("stroke-dashoffset", 0);
-        //         .attr("stroke-dasharray", function(d) { return this.getTotalLength() + " " + this.getTotalLength(); });
-
-        //     }
-        // }
-
-        // // look for resize but use timer to only call the update script when a resize stops
-        // var resizeTimer;
-        // window.onresize = function(event) {
-        //     clearTimeout(resizeTimer);
-        //     resizeTimer = setTimeout(function()
-        //     {
-        //       updateChart(false);
-        //   }, 100);
-        // };
-    };
-
+    }
 
     // Load initial bites
     $scope.getBites();
@@ -295,14 +199,13 @@
 
 // Search foods, list results, show food details
 .controller("FoodSearchCtrl", function($scope, $http, $timeout, $window, API) {
-    $scope.loading = false;
     $scope.bite = {amount: 100};  // Initial portion size is 100g
     var keyPressIndex = 0;
 
     // Search foods, list results
     $scope.search = function(query){
         keyPressIndex++;
-        if ($scope.loading || query.length < 4) {
+        if ($scope.queryLoading || query.length < 4) {
             return;
         }
 
@@ -311,7 +214,7 @@
             if (savedKeyPressIndex < keyPressIndex) {
                 return;
             }
-            $scope.loading = true;
+            $scope.queryLoading = true;
 
             API.fetch("/foods?q=" + query)
             .success(function(response) {
@@ -320,11 +223,11 @@
                 } else {
                     console.log("FOOD QUERY ERROR=" + JSON.stringify(response));
                 }
-                $scope.loading = false;
+                $scope.queryLoading = false;
             })
             .error(function(response) {
                 console.log("FOOD QUERY ERROR=" + JSON.stringify(response));
-                $scope.loading = false;
+                $scope.queryLoading = false;
             });
         }, 600);
     };
@@ -359,7 +262,7 @@
         });
     };
 
-    // Modal configuration and methods
+    // Modal configuration and methods  // TODO into a directive
     $("#modal").modal({show: false});
 
     $scope.openModal = function() {
@@ -374,7 +277,7 @@
     };
 
     $scope.addBite = function() {
-        // Parse date into API's format (yyyyMMdd)
+        // Parse date into API's format (yyyyMMdd)  // TODO global function?
         var dateParts = $scope.bite.date.split("."),
         day = dateParts[0].length == 1 ? "0" + dateParts[0] : dateParts[0],
         month = dateParts[1].length == 1 ? "0" + dateParts[1] : dateParts[1],
@@ -420,6 +323,7 @@
             return;
         }
 
+        $scope.favouriteLoading = true;
         API.fetchSigned("/user/favs/" + fid, "POST")
         .success(function(response) {
             if (response.status == "success") {
@@ -427,13 +331,16 @@
             } else {
                 console.log("ADD FAVOURITE ERROR=" + JSON.stringify(response));
             }
+            $scope.favouriteLoading = false;
         })
         .error(function(response) {
             console.log("ADD FAVOURITE ERROR=" + JSON.stringify(response));
+            $scope.favouriteLoading = false;
         });
     };
 
     $scope.removeFavourite = function(fid) {
+        $scope.favouriteLoading = true;
         API.fetchSigned("/user/favs/" + fid, "DELETE")
         .success(function(response) {
             if (response.status == "success") {
@@ -443,9 +350,11 @@
             } else {
                 console.log("REMOVE FAVOURITE ERROR=" + JSON.stringify(response));
             }
+            $scope.favouriteLoading = false;
         })
         .error(function(response) {
             console.log("REMOVE FAVOURITE ERROR=" + JSON.stringify(response));
+            $scope.favouriteLoading = false;
         });
     };
 
