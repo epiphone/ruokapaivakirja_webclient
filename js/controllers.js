@@ -268,7 +268,7 @@
             }
             $scope.queryLoading = true;
 
-            API.fetch("/foods?q=" + query)
+            API.fetch("/foods?q=" + encodeURI(query))
             .success(function(response) {
                 if (response.status == "success") {
                     $scope.results = response.data;
