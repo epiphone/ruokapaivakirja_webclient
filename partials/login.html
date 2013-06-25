@@ -8,18 +8,19 @@
 
     <form ng-show="loginTabSelected" class="form login-form">
       <legend><h2 class="form-signin-heading">Kirjaudu sisään</h2></legend>
-      <input type="text" ng-model="login.username" class="input-block-level" placeholder="Käyttäjänimi" required>
+      <input type="text" ng-model="login.username" class="input-block-level" placeholder="Käyttäjänimi" required autofocus>
       <input type="password" ng-model="login.password" class="input-block-level" placeholder="Salasana" required>
       <button ng-click="login(login.username, login.password)" type="submit" class="btn btn-large btn-primary">Kirjaudu <i ng-show="loading" class="icon-refresh icon-spin"></i></button>
       <div>{{message}}</div>
     </form>
 
-    <form ng-show="!loginTabSelected" ng-model="registerForm" class="form login-form">
+    <form ng-show="!loginTabSelected" class="form login-form">
       <legend><h2 class="form-signin-heading">Rekisteröidy</h2></legend>
       <input type="text" ng-model="register.username" class="input-block-level" placeholder="Käyttäjänimi" required>
       <input type="password" ng-model="register.password" class="input-block-level" placeholder="Salasana" required pattern="[\w!.-]{8,50}">
       <input type="password" ng-model="register.passwordAgain" class="input-block-level" placeholder="Salasana uudestaan" required pattern="[\w!.-]{8,50}">
-      <button ng-click="login(register.username, register.password, register.passwordAgain)" class="btn btn-large btn-primary" type="submit">Rekisteröidy <i ng-show="loading" class="icon-refresh icon-spin"></i></button>
+      <button ng-click="register(register.username, register.password, register.passwordAgain)" class="btn btn-large btn-primary" type="submit">Rekisteröidy <i ng-show="loading" class="icon-refresh icon-spin"></i></button>
+      <div>{{registerMessage}}</div>
     </form>
 
   </div></div>

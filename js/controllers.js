@@ -3,6 +3,16 @@
 
  angular.module("app.controllers", [])
 
+// Navbar - used to hide nav buttons if the user isn't logged in
+.controller("NavCtrl", function ($scope, $location, UserService) {
+    $scope.loggedIn = function() { return UserService.isLoggedIn(); };
+
+    $scope.navClass = function(link) {
+        var path = $location.path();
+        return link == path ? "disabled" : "";
+    };
+})
+
 // Login
 .controller("LoginCtrl", function ($scope, $http, $location, API, UserService) {
     $scope.loginTabSelected = true;
@@ -25,6 +35,48 @@
             console.log("LOGIN ERROR=" + JSON.stringify(data));
             UserService.logout();
             $scope.message = "Kirjautuminen epäonnistui";
+            $scope.loading = false;
+        });
+    };
+
+    $scope.register = function (username, password, passwordAgain) {
+        if (password != passwordAgain) {
+            $scope.registerMessage = "Varmistus ei täsmää salasanaa";
+            return;
+        }
+
+        $scope.loading = true;
+        UserService.setCredentials(username, password);
+        var data = {
+            username: UserService.getUsername(),
+            key: UserService.getPassword()
+        };
+
+        API.fetch("/user/register", "POST", data)
+        .success(function(response) {
+            if (response.status == "success") {
+                UserService.isLoggedIn(true);
+                $location.path("/");
+            } else {
+                if ("username" in response.data) {
+                    if (response.data.username == "username taken") {
+                        $scope.registerMessage = "Käyttäjänimi on varattu";
+                    } else {
+                        $scope.registerMessage = "Virheellinen käyttäjänimi";
+                    }
+                } else if ("key" in response.data) {
+                    $scope.registerMessage = "Virheellinen salasana";
+                } else {
+                    $scope.registerMessage = "Rekisteröinti epäonnistui";
+                }
+                UserService.logout();
+                $scope.loading = false;
+            }
+        })
+        .error(function(data) {
+            console.log("REGISTER ERROR=" + JSON.stringify(data));
+            UserService.logout();
+            $scope.registerMessage = "Rekisteröinti epäonnistui";
             $scope.loading = false;
         });
     };
@@ -277,16 +329,18 @@
     };
 
     $scope.addBite = function() {
-        // Parse date into API's format (yyyyMMdd)  // TODO global function?
-        var dateParts = $scope.bite.date.split("."),
-        day = dateParts[0].length == 1 ? "0" + dateParts[0] : dateParts[0],
-        month = dateParts[1].length == 1 ? "0" + dateParts[1] : dateParts[1],
-        year = dateParts[2].length == 2 ? "20" + dateParts[2] : dateParts[2],
+        var date = $scope.selectedDate;
+        console.log("$scope.selectedDate=" + $scope.selectedDate);
 
-        data = {
+        if (!date) {
+            alert("Valitse päivämäärä");
+            return;
+        }
+
+        var data = {
             fid: $scope.food["_id"],
             amount: $scope.bite.amount,
-            date: year + month + day
+            date: date
         };
         $scope.addStatus = "loading";
 

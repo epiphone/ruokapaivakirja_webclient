@@ -71,9 +71,9 @@
       <div ng-switch-when="loading">Lisätään annosta...</div>
       <div ng-switch-when="success">Annos lisätty!</div>
       <div ng-switch-when="error">Annoksen lisääminen epäonnistui</div>
-      <div ng-switch-default>
+      <div ng-show="addStatus=='started'">
         <p>{{food.name|title}}, <strong>{{bite.amount}}g</strong></p>
-        Päivämäärä: <input type="text" ng-model="bite.date" required pattern="(0?[1-9]|[12][0-9]|30|31)\.(0?[1-9]|1[0-2])\.\d{2,4}"/>
+        <div datepicker bind="selectedDate" id="datepicker"></div>
       </div>
     </div>
     <div class="modal-footer">

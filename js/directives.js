@@ -7,6 +7,48 @@
 angular.module("app.directives", [])
 
 /**
+ * Datepicker that binds to the given variable.
+ */
+.directive("datepicker", function($timeout) {
+    return {
+        restrict: "A",
+
+        scope: {
+            bind: "="
+        },
+
+        link: function(scope, element, attrs) {
+            // Initialize datepicker
+            $(element[0]).datepicker({
+                defaultDate: new Date(),
+                dateFormat: "yymmdd",
+                dayNamesMin: ["Su", "Ma", "Ti", "Ke", "To", "Pe", "La"],
+                monthNames: ["Tammi", "Helmi", "Maalis", "Huhti", "Touko", "Kesä", "Heinä", "Elo", "Syys", "Loka", "Marras", "Joulu"],
+                onSelect: function(dateText, obj) {
+                    scope.$apply(function() {
+                        scope.bind = dateText;
+                    });
+                }
+            });
+
+            // Set initial date TODO better way for date parsing?
+            var initialDate = $(element[0]).datepicker("getDate"),
+            dt = {
+                d: initialDate.getDate().toString(),
+                m: (initialDate.getMonth() + 1).toString(),
+                y: initialDate.getFullYear().toString()
+            };
+
+            dt.d = dt.d.length == 1 ? "0" + dt.d : dt.d;
+            dt.m = dt.m.length == 1 ? "0" + dt.m : dt.m;
+
+            scope.bind = "" + dt.y + dt.m + dt.d;
+        }
+    };
+})
+
+
+/**
  * Slider with two handles and a date range.
  * When handles are moved, "min" and "max" properties of the bound object
  * change accordingly.
@@ -38,16 +80,12 @@ angular.module("app.directives", [])
                     });
                 }
             });
+
             var html = "<div class='handle-tooltip'><div class='handle-tooltip-arrow'>" +
             "</div><div class='handle-tooltip-inner'></div></div>";
             $(element[0]).children(".ui-slider-handle").html(html);
             $(".handle-tooltip-inner:eq(0)").html($compile("<span>{{bind.min|date:'d.M.yy'}}</span>")(scope));
             $(".handle-tooltip-inner:eq(1)").html($compile("<span>{{bind.max|date:'d.M.yy'}}</span>")(scope));
-
-
-
-
-            // $compile(element.contents())(scope);
         }
     };
 })

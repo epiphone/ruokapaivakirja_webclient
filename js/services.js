@@ -90,7 +90,7 @@ angular.module("app.services", [])
         if (["GET", "DELETE"].indexOf(options.method) > -1) {
             options.params = data;
         } else {
-            options.data = data;
+            options.data = $.param(data);
         }
 
         return $http(options);
@@ -157,7 +157,7 @@ angular.module("app.services", [])
     }
 
     return {
-        fetchSigned: fetchSigned,
-        fetch: fetch
+        fetch: fetch,
+        fetchSigned: fetchSigned
     };
 });
