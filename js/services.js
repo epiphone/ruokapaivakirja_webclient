@@ -8,11 +8,11 @@ angular.module("app.services", [])
 
 // Service for sharing user information between controllers
 .factory("UserService", function(HashService) {
-    var username,
-    password,
-    loggedIn = false,
-    passwordSalt = "djn12gsiugaieufe4f8fafh";
-
+    var username;
+    var password;
+    var loggedIn = false;
+    var passwordSalt = "djn12gsiugaieufe4f8fafh";
+    var goals;
 
     function getUsername() { return username; }
     function getPassword() { return password; }
@@ -35,12 +35,17 @@ angular.module("app.services", [])
         loggedIn = false;
     }
 
+    function getGoals() { return goals; }
+    function setGoals(newGoals) { goals = newGoals; }
+
     return {
         getUsername: getUsername,
         getPassword: getPassword,
         isLoggedIn: isLoggedIn,
         setCredentials: setCredentials,
-        logout: logout
+        logout: logout,
+        getGoals: getGoals,
+        setGoals: setGoals
     };
 })
 

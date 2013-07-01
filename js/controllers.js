@@ -13,7 +13,7 @@
     };
 })
 
-// Login
+// Login and registration
 .controller("LoginCtrl", function ($scope, $http, $location, API, UserService) {
     $scope.loginTabSelected = true;
 
@@ -56,7 +56,7 @@
         .success(function(response) {
             if (response.status == "success") {
                 UserService.isLoggedIn(true);
-                $location.path("/");
+                $location.path("/goals");
             } else {
                 if ("username" in response.data) {
                     if (response.data.username == "username taken") {
@@ -80,6 +80,13 @@
             $scope.loading = false;
         });
     };
+})
+
+// Goals - user is redirected here after registration to set daily calorie goals etc.
+.controller("GoalsCtrl", function($scope, API, UserService) {
+    if (!UserService.getGoals()) {
+        $scope.newUser = true;
+    }
 })
 
 // Index - list bites

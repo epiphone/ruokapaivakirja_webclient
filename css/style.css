@@ -5,7 +5,7 @@
 
 /* BITES PAGE */
 
-#slider {
+#dateslider {
     width: 75%;
     float: left;
     margin: 40px 20px 20px 35px;
@@ -24,7 +24,8 @@
     visibility: visible;
     margin-top: -2px;
     bottom:120%;
-    margin-left: -1.9em;
+    /*margin-left: -1.9em;*/
+    white-space: nowrap;
 }
 
 .ui-slider a {

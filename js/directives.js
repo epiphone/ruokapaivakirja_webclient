@@ -9,7 +9,7 @@ angular.module("app.directives", [])
 /**
  * Datepicker that binds to the given variable.
  */
-.directive("datepicker", function($timeout) {
+ .directive("datepicker", function($timeout) {
     return {
         restrict: "A",
 
@@ -47,13 +47,67 @@ angular.module("app.directives", [])
     };
 })
 
+/**
+ * Slider with a single handle.
+ */
+ .directive("slider", function($compile, $timeout) {
+    return {
+        restrict: "A",
+
+        scope: {
+            bind:    "=",
+            min:     "@",
+            max:     "@",
+            initial: "@",
+            prefix:  "@",
+            postfix: "@"
+        },
+
+        link: function(scope, element, attrs) {
+            var max = parseInt(scope.max, 10) || 100;
+            var min = parseInt(scope.min, 10) || 0;
+            var initial = parseInt(scope.initial, 10) || Math.floor(max / 2);
+            var prefix = scope.prefix ? scope.prefix + " " : "";
+            var postfix = scope.postfix ? " " + scope.postfix : "";
+            scope.bind = initial;
+
+            $(element[0]).slider({
+                min: min,
+                max: max,
+                value: initial,
+                slide: function(event, ui) {
+                    scope.$apply(function() {
+                        scope.bind = ui.value;
+                        // console.log(ui.value);
+                    });
+                }
+            });
+
+            // Append tooltip:
+            var handle = $(element[0]).children(".ui-slider-handle");
+            var html = "<div class='handle-tooltip'><div class='handle-tooltip-arrow'>" +
+            "</div><div class='handle-tooltip-inner'></div></div>";
+            handle.html(html);
+            $(element[0]).find(".handle-tooltip-inner:eq(0)").html(
+                $compile("<span>" + prefix + "{{bind}}" + postfix + "</span>")(scope));
+            var tooltip = $(element[0]).find(".handle-tooltip");
+
+            // Center tooltip, use $timeout to let the DOM render first:
+            $timeout(function(){
+                tooltip.css("margin-left", -(tooltip.outerWidth() / 2) + (handle.outerWidth() / 2));
+            });
+
+        }
+    };
+})
+
 
 /**
  * Slider with two handles and a date range.
  * When handles are moved, "min" and "max" properties of the bound object
  * change accordingly.
  */
- .directive("slider", function($compile) {
+ .directive("dateslider", function($compile) {
     return {
         restrict: "A",
 
@@ -65,8 +119,9 @@ angular.module("app.directives", [])
         link: function(scope, element, attrs) {
             var maxValue = scope.maxValue || 30;
             var today = new Date(new Date().toDateString());
-            var min = maxValue - (today.getDate() - scope.bind.min.getDate());
-            var max = maxValue - (today.getDate() - scope.bind.max.getDate());
+            console.log("scope.bind.min=" + scope.bind.min);
+            var min = maxValue - Math.abs(today.getDate() - scope.bind.min.getDate());
+            var max = maxValue - Math.abs(today.getDate() - scope.bind.max.getDate());
 
             $(element[0]).slider({
                 range: true,

@@ -16,6 +16,7 @@ angular.module("app", ["app.filters", "app.services", "app.directives", "app.con
     $routeProvider.when("/", {templateUrl: "partials/index.html", controller: "IndexCtrl"});
     $routeProvider.when("/login", {templateUrl: "partials/login.html", controller: "LoginCtrl"});
     $routeProvider.when("/foods", {templateUrl: "partials/foods.html", controller: "FoodSearchCtrl"});
+    $routeProvider.when("/goals", {templateUrl: "partials/goals.html", controller: "GoalsCtrl"});
 
     $routeProvider.otherwise({redirectTo: "/"});
 
