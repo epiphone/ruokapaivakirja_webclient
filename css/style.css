@@ -144,3 +144,42 @@ path.fat {
 .slider .ui-slider-handle:active .handle-tooltip {
     opacity: 1;
 }
+
+/*NG-ANIMATE TEST*/
+.login-form-container {
+    position: relative;
+    height: 250px;
+    overflow: hidden;
+}
+
+.login-form-container > div {
+    position: absolute;
+    width: 220px;
+}
+
+.fade-enter, .fade-leave {
+    /*-webkit-transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) .5s;
+    -moz-transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) .5s;
+    -o-transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) .5s;
+    transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) .5s;*/
+    -webkit-transition:all ease .5s;
+    -moz-transition:all ease .5s;
+    -o-transition:all ease .5s;
+    transition:all ease .5s;
+}
+
+.fade-enter {
+    left: 120%;
+}
+
+.fade-enter.fade-enter-active {
+    left: 0;
+}
+
+.fade-leave {
+    left: 0;
+}
+
+.fade-leave.fade-leave-active {
+    left: -120%;
+}
