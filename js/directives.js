@@ -49,6 +49,7 @@ angular.module("app.directives", [])
 
 /**
  * Slider with a single handle.
+ * TODO: combine slider directives
  */
  .directive("slider", function($compile, $timeout) {
     return {
@@ -60,12 +61,19 @@ angular.module("app.directives", [])
             max:     "@",
             initial: "@",
             prefix:  "@",
-            postfix: "@"
+            postfix: "@",
+            displayValues: "="
         },
 
         link: function(scope, element, attrs) {
-            var max = parseInt(scope.max, 10) || 100;
-            var min = parseInt(scope.min, 10) || 0;
+            var min, max;
+            if (scope.displayValues) {
+                min = 0;
+                max = scope.displayValues.length - 1;
+            } else {
+                min = parseInt(scope.min, 10) || 0;
+                max = parseInt(scope.max, 10) || 100;
+            }
             var initial = parseInt(scope.initial, 10) || Math.floor(max / 2);
             var prefix = scope.prefix ? scope.prefix + " " : "";
             var postfix = scope.postfix ? " " + scope.postfix : "";
@@ -78,8 +86,13 @@ angular.module("app.directives", [])
                 slide: function(event, ui) {
                     scope.$apply(function() {
                         scope.bind = ui.value;
-                        // console.log(ui.value);
                     });
+                },
+                start: function(event, ui) {
+                    element.find(".handle-tooltip").toggleClass("appeared");
+                },
+                stop: function(event, ui) {
+                    element.find(".handle-tooltip").toggleClass("appeared");
                 }
             });
 
@@ -88,8 +101,13 @@ angular.module("app.directives", [])
             var html = "<div class='handle-tooltip'><div class='handle-tooltip-arrow'>" +
             "</div><div class='handle-tooltip-inner'></div></div>";
             handle.html(html);
-            $(element[0]).find(".handle-tooltip-inner:eq(0)").html(
-                $compile("<span>" + prefix + "{{bind}}" + postfix + "</span>")(scope));
+            if (scope.displayValues) {
+                $(handle[0]).find(".handle-tooltip-inner:eq(0)")
+                .html($compile("<span>" + prefix + "{{displayValues[bind]}}" + postfix + "</span>")(scope));
+            } else {
+                $(handle[0]).find(".handle-tooltip-inner:eq(0)")
+                .html($compile("<span>" + prefix + "{{bind}}" + postfix + "</span>")(scope));
+            }
             var tooltip = $(element[0]).find(".handle-tooltip");
 
             // Center tooltip, use $timeout to let the DOM render first:
@@ -97,6 +115,11 @@ angular.module("app.directives", [])
                 tooltip.css("margin-left", -(tooltip.outerWidth() / 2) + (handle.outerWidth() / 2));
             });
 
+            // This is called when the bound data changes...
+            scope.$watch("bind", function(newData) {
+                element.slider("value", newData);
+
+            }, true);
         }
     };
 })
@@ -107,7 +130,7 @@ angular.module("app.directives", [])
  * When handles are moved, "min" and "max" properties of the bound object
  * change accordingly.
  */
- .directive("dateslider", function($compile) {
+ .directive("dateslider", function($compile, $timeout) {
     return {
         restrict: "A",
 
@@ -136,11 +159,22 @@ angular.module("app.directives", [])
                 }
             });
 
+            // Append tooltips:
+            var handles = $(element[0]).children(".ui-slider-handle");
             var html = "<div class='handle-tooltip'><div class='handle-tooltip-arrow'>" +
             "</div><div class='handle-tooltip-inner'></div></div>";
-            $(element[0]).children(".ui-slider-handle").html(html);
-            $(".handle-tooltip-inner:eq(0)").html($compile("<span>{{bind.min|date:'d.M.yy'}}</span>")(scope));
-            $(".handle-tooltip-inner:eq(1)").html($compile("<span>{{bind.max|date:'d.M.yy'}}</span>")(scope));
+            $(handles).html(html);
+            var tooltipInners = $(handles).find(".handle-tooltip-inner");
+            $(tooltipInners[0]).html($compile("<span>{{bind.min|date:'d.M.yy'}}</span>")(scope));
+            $(tooltipInners[1]).html($compile("<span>{{bind.max|date:'d.M.yy'}}</span>")(scope));
+
+            // Center tooltips:
+            var tooltips = $(handles).find(".handle-tooltip");
+            $timeout(function(){
+                tooltips.css("margin-left", function(i) {
+                    return -($(tooltips[i]).outerWidth() / 2) + ($(handles[i]).outerWidth() / 2);
+                });
+            });
         }
     };
 })

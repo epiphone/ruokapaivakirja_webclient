@@ -87,6 +87,22 @@
     if (!UserService.getGoals()) {
         $scope.newUser = true;
     }
+
+    $scope.activityLevels = [
+        "Ei ollenkaan",
+        "Vähän",
+        "Kohtalaisesti",
+        "Paljon",
+        "Todella paljon"
+    ];
+
+    $scope.activityDescriptions = [
+        "Istumatyö, vähän liikuntaa",
+        "Kevyttä liikuntaa 1-3 tuntia viikossa",
+        "Kohtalaisen raskasta liikuntaa 3-5 tuntia viikossa",
+        "Raskasta liikuntaa 6-7 tuntia viikossa",
+        "Raskasta liikuntaa >7 tuntia viikossa"
+    ];
 })
 
 // Index - list bites

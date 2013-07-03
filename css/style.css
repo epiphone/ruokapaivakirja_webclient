@@ -5,7 +5,7 @@
 
 /* BITES PAGE */
 
-#dateslider {
+.dateslider {
     width: 75%;
     float: left;
     margin: 40px 20px 20px 35px;
@@ -17,6 +17,7 @@
 
 .handle-tooltip {
     position: absolute;
+    min-width: 70px;
     z-index: 1020;
     display: block;
     padding: 5px;
@@ -101,4 +102,30 @@ path.fat {
     stroke: none;
     fill: #e5f3f9;
     fill-opacity: 0.8;
+}
+
+
+/*GOALS PAGE*/
+.slider {
+    margin-top: 8px;
+    margin-right: 10px;
+}
+
+.slider-container .add-on {
+    min-width: 39px;
+}
+
+.slider .ui-slider-handle {
+    margin-top: -5px;
+}
+
+.slider .handle-tooltip {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.slider .appeared {
+    opacity: 1;
+    transition: opacity 0.8s;
 }
