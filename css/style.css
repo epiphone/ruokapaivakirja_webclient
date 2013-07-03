@@ -1,3 +1,16 @@
+/*LOGIN PAGE*/
+.login-window {
+    /*padding: 20px;*/
+    padding: 20px 35px;
+    background-color: #FFF;
+    border-radius: 14px;
+    border: 1px solid #D3D3D3;
+}
+
+.login-window .alert {
+    margin-top: 10px;
+}
+
 /* FOOD SEARCH PAGE */
 .food-search .favourites {
     background-color: #EEEEEE;
@@ -122,10 +135,12 @@ path.fat {
 .slider .handle-tooltip {
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s ease-in-out;
+    -webkit-transition: opacity 0.2s ease-in-out;
+    -moz-transition: opacity 0.2s ease-in-out;
+    -o-transition: opacity 0.2s ease-in-out;
 }
 
-.slider .appeared {
+.slider .ui-slider-handle:active .handle-tooltip {
     opacity: 1;
-    transition: opacity 0.8s;
 }

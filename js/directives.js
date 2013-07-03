@@ -87,12 +87,6 @@ angular.module("app.directives", [])
                     scope.$apply(function() {
                         scope.bind = ui.value;
                     });
-                },
-                start: function(event, ui) {
-                    element.find(".handle-tooltip").toggleClass("appeared");
-                },
-                stop: function(event, ui) {
-                    element.find(".handle-tooltip").toggleClass("appeared");
                 }
             });
 
@@ -115,7 +109,7 @@ angular.module("app.directives", [])
                 tooltip.css("margin-left", -(tooltip.outerWidth() / 2) + (handle.outerWidth() / 2));
             });
 
-            // This is called when the bound data changes...
+            // Move slider when the bound data is changed:
             scope.$watch("bind", function(newData) {
                 element.slider("value", newData);
 

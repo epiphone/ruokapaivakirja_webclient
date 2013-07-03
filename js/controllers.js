@@ -23,6 +23,7 @@
         API.fetchSigned("/user/favs")
         .success(function(response) {
             if (response.status == "success") {
+                angular.element(".backstretch").remove();  // Remove login page background TODO: directive?
                 UserService.isLoggedIn(true);
                 $location.path("/");
             } else {
