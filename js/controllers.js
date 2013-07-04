@@ -104,6 +104,18 @@
         "Raskasta liikuntaa 6-7 tuntia viikossa",
         "Raskasta liikuntaa >7 tuntia viikossa"
     ];
+    $scope.isFemale = false;
+
+    $scope.calculateBMR = function(age, height, weight, activityLevel, isFemale) {
+        var base;
+        var activityMultipliers = [1.2, 1.375, 1.55, 1.725, 1.9];
+        if (isFemale) {
+            base = 447.593 + 9.247 * weight + 3.098 * height - 4.330 * age;
+        } else {
+            base = 88.362 + 13.397 * weight + 4.799 * height - 5.677 * age;
+        }
+        return base * activityMultipliers[activityLevel];
+    };
 })
 
 // Index - list bites
