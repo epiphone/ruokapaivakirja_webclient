@@ -120,8 +120,23 @@ path.fat {
 
 /*GOALS PAGE*/
 .slider {
-    margin-top: 8px;
-    margin-right: 10px;
+    margin: 8px 10px 0px 10px;
+}
+
+.slider-container {
+    text-align: center;
+}
+
+.slider-container > .span1 {
+    text-align: right;
+}
+
+.slider-container button {
+    min-width: 140px;
+}
+
+.slider-container {
+    min-height: 80px;
 }
 
 .slider-container .add-on {
