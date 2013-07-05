@@ -84,7 +84,7 @@
 })
 
 // Goals - user is redirected here after registration to set daily calorie goals etc.
-.controller("GoalsCtrl", function($scope, API, UserService) {
+.controller("GoalsCtrl", function($scope, $location, $timeout, API, UserService) {
     if (!UserService.getGoals()) {
         $scope.newUser = true;
     }
@@ -114,8 +114,53 @@
         } else {
             base = 88.362 + 13.397 * weight + 4.799 * height - 5.677 * age;
         }
-        return base * activityMultipliers[activityLevel];
+        $scope.bmr = base * activityMultipliers[activityLevel];
+        return $scope.bmr;
     };
+
+    $scope.resetDistribution = function() {
+        $scope.distribution = {min: 30, max: 85};
+    };
+
+    $scope.test = function() {
+        $scope.loadingGoals = !$scope.loadingGoals;
+        console.log("loadingGoals=" + $scope.loadingGoals);
+    };
+
+    $scope.setGoals = function() {
+        $scope.loadingGoals = true;
+
+        var min = $scope.distribution.min;
+        var max = $scope.distribution.max;
+        var bmr = $scope.bmr;
+
+        var payload = {
+            kcal: Math.floor(bmr),
+            carbs: Math.floor(min / 100 * bmr / 4),
+            fat: Math.floor((max - min) / 100 * bmr / 9),
+            protein: Math.floor((100 - max) / 100 * bmr / 4)
+        };
+
+        API.fetchSigned("/user/goals", "POST", payload)
+        .success(function(response) {
+            if (response.status == "success") {
+                // Set goals, redirect to index page:
+                UserService.setGoals(payload);
+                $timeout(function() {
+                    $location.path("/");
+                }, 1000);
+            } else {
+                console.log("SET GOALS ERROR=" + JSON.stringify(response));
+            }
+            $scope.loadingGoals = false;
+        })
+        .error(function(response) {
+            console.log("SET GOALS ERROR=" + JSON.stringify(response));
+            $scope.loadingGoals = false;
+        });
+    };
+
+    $scope.resetDistribution();
 })
 
 // Index - list bites

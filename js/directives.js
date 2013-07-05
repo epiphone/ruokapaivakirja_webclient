@@ -7,6 +7,52 @@
 angular.module("app.directives", [])
 
 /**
+ * Shows an appended spinner when the bound value is true.
+ *
+ * If element already has a child icon, it will be replaced by the spinner
+ * icon when spinning.
+ * Example: <button spin-when="loading">OK<button>
+ */
+.directive("spinWhen", function($compile) {
+    return {
+        restrict: "A",
+
+        scope: false,
+
+        link: function(scope, element, attrs) {
+            scope = {bind: attrs.spinWhen};
+            var html;
+            var text = element.text().trim();
+            var childIcons = element.children(".icon");
+            if (childIcons.length > 0) {
+                var defaultClass = childIcons.attr("class");
+                html = [
+                    "<span>",
+                    text,
+                    " </span>",
+                    "<i class='icon' ng-class=\"",
+                    scope.bind,
+                    "?'icon-refresh icon-spin':'",
+                    defaultClass,
+                    "'></i>"
+                ].join("");
+                element.html($compile(html)(scope));
+            } else {
+                html = [
+                    "<span>",
+                    text,
+                    " </span><i ng-show='",
+                    scope.bind,
+                    "' class='icon-spin icon-refresh'></i>"
+                ].join("");
+                var html2 = "<p>Valmis </p><i class='icon icon-spin icon-refresh' ng-show='loadingGoals'></icon>";
+                element.html($compile(html)(scope));
+            }
+        }
+    };
+})
+
+/**
  * Datepicker that binds to the given variable.
  */
  .directive("datepicker", function($timeout) {
@@ -120,7 +166,84 @@ angular.module("app.directives", [])
 
 
 /**
+ * Slider with two handles and 3 areas.
+ */
+ .directive("areaslider", function($compile, $timeout) {
+    return {
+        restrict: "A",
+
+        scope: {
+            bind:    "="
+        },
+
+        link: function(scope, element, attrs) {
+            var min = 0;
+            var max = 100;
+            var bars;
+            var firstBarWidth;
+            var secondBarWidth;
+
+            scope.bind = scope.bind || {min: 30, max: 60};
+
+            function scale(value) {
+                return Math.floor(value / (max - min) * 100);
+            }
+
+            function changeAreas(values) {
+                scope.bind.min = values[0];
+                scope.bind.max = values[1];
+                firstBarWidth = scale(values[0]);
+                secondBarWidth = scale(values[1] - values[0]);
+
+                $(bars[0]).css("width", firstBarWidth + "%");
+                $(bars[1]).css("width", secondBarWidth + "%");
+                $(bars[2]).css("width", (100 - firstBarWidth - secondBarWidth) + "%");
+            }
+
+            $(element[0]).slider({
+                range: true,
+                min: min,
+                max: max,
+                values: [33, 66],
+                slide: function(event, ui) {
+                    scope.$apply(function() {
+                        scope.bind.min = ui.values[0];
+                        scope.bind.max = ui.values[1];
+                        firstBarWidth = scale(ui.values[0]);
+                        secondBarWidth = scale(ui.values[1] - ui.values[0]);
+
+                        $(bars[0]).css("width", firstBarWidth + "%");
+                        $(bars[1]).css("width", secondBarWidth + "%");
+                        $(bars[2]).css("width", (100 - firstBarWidth - secondBarWidth) + "%");
+
+                    });
+                }
+            });
+
+            // Append progress bars behind the slider:
+            $(element[0]).append([
+                "<div class='progress'>",
+                "<div class='bar notransition bar-success' style='width: 30%'></div>",
+                "<div class='bar notransition bar-warning' style='width: 30%'></div>",
+                "<div class='bar notransition bar-danger' style='width: 30%'></div>",
+                "</div>"].join("")
+                );
+
+            bars = element.find(".progress .bar");
+
+            // Move slider when the bound data is changed:
+            scope.$watch("bind", function(newData) {
+                var values = [newData.min, newData.max];
+                element.slider("values", values);
+                changeAreas(values);
+            }, true);
+        }
+    };
+})
+
+/**
  * Slider with two handles and a date range.
+ *
  * When handles are moved, "min" and "max" properties of the bound object
  * change accordingly.
  */
@@ -176,7 +299,8 @@ angular.module("app.directives", [])
 
 /**
  * A responsive linechart with multiple lines and an area.
- * Usage: <div linechart bind="data" interpolation="linear"></div>
+ *
+ * Example: <div linechart bind="data" interpolation="linear"></div>
  */
  .directive("linechart", function($window) {
     return {

@@ -120,12 +120,14 @@ path.fat {
 
 /*GOALS PAGE*/
 .slider {
-    margin: 8px 10px 0px 10px;
+    margin: 18px 10px 30px 10px;
 }
 
 .slider-container {
     text-align: center;
 }
+
+.slider-container:
 
 .slider-container > .span1 {
     text-align: right;
@@ -144,7 +146,8 @@ path.fat {
 }
 
 .slider .ui-slider-handle {
-    margin-top: -5px;
+    height: 3em;
+    margin-top: -0.4em;
 }
 
 .slider .handle-tooltip {
@@ -160,14 +163,19 @@ path.fat {
     opacity: 1;
 }
 
-/*NG-ANIMATE TEST*/
-.login-form-container {
-    position: relative;
-    height: 250px;
-    overflow: hidden;
+.results-container {
+    margin-top: 40px;
 }
 
-.login-form-container > div {
-    position: absolute;
-    width: 220px;
+
+/*UTILITIES*/
+.notransition {
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+}
+
+.nomargin {
+    margin: 0;
 }
