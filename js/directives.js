@@ -17,37 +17,34 @@ angular.module("app.directives", [])
     return {
         restrict: "A",
 
-        scope: false,
-
         link: function(scope, element, attrs) {
-            scope = {bind: attrs.spinWhen};
-            var html;
-            var text = element.text().trim();
-            var childIcons = element.children(".icon");
-            if (childIcons.length > 0) {
-                var defaultClass = childIcons.attr("class");
-                html = [
-                    "<span>",
-                    text,
-                    " </span>",
-                    "<i class='icon' ng-class=\"",
-                    scope.bind,
-                    "?'icon-refresh icon-spin':'",
-                    defaultClass,
-                    "'></i>"
-                ].join("");
-                element.html($compile(html)(scope));
+            var spinner;
+            var toggleSpinnerFunc;
+            var existingClass = element.children(".icon").attr("class");
+
+            // Element already has an icon:
+            if (existingClass) {
+                toggleSpinnerFunc = function(showSpinner) {
+                    var newClass = showSpinner ? "icon icon-spin icon-refresh" : existingClass;
+                    spinner.attr("class", newClass);
+                };
+
+            // Element doesn't have an icon, add a new icon:
             } else {
-                html = [
-                    "<span>",
-                    text,
-                    " </span><i ng-show='",
-                    scope.bind,
-                    "' class='icon-spin icon-refresh'></i>"
-                ].join("");
-                var html2 = "<p>Valmis </p><i class='icon icon-spin icon-refresh' ng-show='loadingGoals'></icon>";
-                element.html($compile(html)(scope));
+                element.append(
+                    " <i class='icon icon-spin icon-refresh' style='display:none;'></i>");
+                toggleSpinnerFunc = function(showSpinner) {
+                    showSpinner ? spinner.show() : spinner.hide();
+                };
             }
+
+            spinner = element.children(".icon");
+
+            // This is called when the bound variable changes:
+            scope.$watch(attrs.spinWhen, function(showSpinner) {
+                toggleSpinnerFunc(showSpinner);
+                showSpinner ? element.addClass("disabled") : element.removeClass("disabled");
+            }, true);
         }
     };
 })
@@ -58,10 +55,6 @@ angular.module("app.directives", [])
  .directive("datepicker", function($timeout) {
     return {
         restrict: "A",
-
-        scope: {
-            bind: "="
-        },
 
         link: function(scope, element, attrs) {
             // Initialize datepicker

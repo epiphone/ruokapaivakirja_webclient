@@ -90,19 +90,19 @@
     }
 
     $scope.activityLevels = [
-        "Ei ollenkaan",
-        "Vähän",
-        "Kohtalaisesti",
-        "Paljon",
-        "Todella paljon"
+    "Ei ollenkaan",
+    "Vähän",
+    "Kohtalaisesti",
+    "Paljon",
+    "Todella paljon"
     ];
 
     $scope.activityDescriptions = [
-        "Istumatyö, vähän liikuntaa",
-        "Kevyttä liikuntaa 1-3 tuntia viikossa",
-        "Kohtalaisen raskasta liikuntaa 3-5 tuntia viikossa",
-        "Raskasta liikuntaa 6-7 tuntia viikossa",
-        "Raskasta liikuntaa >7 tuntia viikossa"
+    "Istumatyö, vähän liikuntaa",
+    "Kevyttä liikuntaa 1-3 tuntia viikossa",
+    "Kohtalaisen raskasta liikuntaa 3-5 tuntia viikossa",
+    "Raskasta liikuntaa 6-7 tuntia viikossa",
+    "Raskasta liikuntaa >7 tuntia viikossa"
     ];
     $scope.isFemale = false;
 
@@ -120,11 +120,6 @@
 
     $scope.resetDistribution = function() {
         $scope.distribution = {min: 30, max: 85};
-    };
-
-    $scope.test = function() {
-        $scope.loadingGoals = !$scope.loadingGoals;
-        console.log("loadingGoals=" + $scope.loadingGoals);
     };
 
     $scope.setGoals = function() {

@@ -32,7 +32,7 @@ angular.module("app", ["app.filters", "app.services", "app.directives", "app.con
     // Redirect to login page if the user tries to access a restricted location
     $rootScope.$on("$routeChangeStart", function (event, next, current) {
         if (!UserService.isLoggedIn() && next.controller != "LoginCtrl") {
-            $location.path("/goals"); // TODO debug
+            $location.path("/login"); // TODO debug
         }
     });
 });

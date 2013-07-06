@@ -78,8 +78,7 @@
             <p class="muted nomargin"><small>{{(distribution.max - distribution.min) / 100 * bmr / 9|number:0}}g rasvaa</small></p>
             <p class="muted nomargin"><small>{{(100 - distribution.max) / 100 * bmr / 4|number:0}}g proteiinia</small></p>
             <br>
-            <button ng-click="setGoals()" class="btn btn-large btn-success">Valmis <i ng-show="bite.loading" class="icon-refresh icon-spin"></i><i class="icon icon-angle-right"></i></button>
-            <button spin-when="loadingGoals" ng-click="test()" class="btn btn-large btn-success">Valmis</button>
+            <button spin-when="loadingGoals" ng-click="setGoals()" class="btn btn-large btn-success">Valmis <i class="icon icon-angle-right"></i></button>
             <br>
             <small><a href="http://en.wikipedia.org/wiki/Harris-Benedict_equation" target="_blank">Lähde</a></small>
         </div>

@@ -2,7 +2,7 @@
   <div class="span12">
 
     <div dateslider bind="slider" days="30" class="dateslider"></div>
-    <button ng-class="{disabled:bitesLoading}" class="btn btn-large btn-warning btn-slider" ng-click="getBites()">Rajaa <i ng-show="bitesLoading" class="icon icon-refresh icon-spin"></i></button>
+    <button spin-when="bitesLoading" ng-click="getBites()" class="btn btn-large btn-warning btn-slider">Rajaa</button>
 
 
     <div ng-switch on="bitesByDate.length">
