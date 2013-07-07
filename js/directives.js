@@ -43,7 +43,7 @@ angular.module("app.directives", [])
             // This is called when the bound variable changes:
             scope.$watch(attrs.spinWhen, function(showSpinner) {
                 toggleSpinnerFunc(showSpinner);
-                showSpinner ? element.addClass("disabled") : element.removeClass("disabled");
+                element[0].disabled = showSpinner;
             }, true);
         }
     };

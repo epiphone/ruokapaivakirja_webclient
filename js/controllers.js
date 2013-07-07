@@ -84,17 +84,15 @@
 })
 
 // Goals - user is redirected here after registration to set daily calorie goals etc.
-.controller("GoalsCtrl", function($scope, $location, $timeout, API, UserService) {
-    if (!UserService.getGoals()) {
-        $scope.newUser = true;
-    }
+.controller("GoalsCtrl", function($scope, $location, API, UserService) {
+    $scope.existingGoals = UserService.getGoals();
 
     $scope.activityLevels = [
-    "Ei ollenkaan",
-    "Vähän",
-    "Kohtalaisesti",
-    "Paljon",
-    "Todella paljon"
+        "Ei ollenkaan",
+        "Vähän",
+        "Kohtalaisesti",
+        "Paljon",
+        "Todella paljon"
     ];
 
     $scope.activityDescriptions = [
@@ -104,6 +102,7 @@
     "Raskasta liikuntaa 6-7 tuntia viikossa",
     "Raskasta liikuntaa >7 tuntia viikossa"
     ];
+
     $scope.isFemale = false;
 
     $scope.calculateBMR = function(age, height, weight, activityLevel, isFemale) {
@@ -129,6 +128,11 @@
         var max = $scope.distribution.max;
         var bmr = $scope.bmr;
 
+        if (_.some([min, max, bmr], function(e) { return !e || isNaN(e) || e < 1; })) {
+            $scope.errorMessage = "Virheellinen syöte";
+            return;
+        }
+
         var payload = {
             kcal: Math.floor(bmr),
             carbs: Math.floor(min / 100 * bmr / 4),
@@ -141,9 +145,7 @@
             if (response.status == "success") {
                 // Set goals, redirect to index page:
                 UserService.setGoals(payload);
-                $timeout(function() {
-                    $location.path("/");
-                }, 1000);
+                $location.path("/");
             } else {
                 console.log("SET GOALS ERROR=" + JSON.stringify(response));
             }

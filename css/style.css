@@ -120,7 +120,11 @@ path.fat {
 
 /*GOALS PAGE*/
 .slider {
-    margin: 18px 10px 30px 10px;
+    margin: 8px 10px 30px 10px;
+}
+
+.slider[areaslider] {
+    margin-top: 18px;
 }
 
 .slider-container {
