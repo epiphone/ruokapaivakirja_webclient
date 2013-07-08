@@ -56,6 +56,7 @@
         API.fetch("/user/register", "POST", data)
         .success(function(response) {
             if (response.status == "success") {
+                angular.element(".backstretch").remove();  // Remove login page background TODO: directive?
                 UserService.isLoggedIn(true);
                 $location.path("/goals");
             } else {
@@ -130,6 +131,7 @@
 
         if (_.some([min, max, bmr], function(e) { return !e || isNaN(e) || e < 1; })) {
             $scope.errorMessage = "Virheellinen syöte";
+            $scope.loadingGoals = false;
             return;
         }
 

@@ -4,93 +4,94 @@
 </div>
 <h2 class="text-center">Energiankulutus</h2>
 <hr>
-<div ng-show="existingGoals">
-    Nykyinen energian
-</div>
 <form>
-<div class="slider-group-container">
-    <div class="row-fluid slider-container">
-        <div class="span1 pull-left">Sukupuoli: </div>
-        <div class="span9">
-            <button class="btn btn-large" ng-click="isFemale = false" ng-class="isFemale ? 'btn-link' : 'btn-warning'">Mies <i class="icon icon-male"></i></button>
-            <button class="btn btn-large" ng-click="isFemale = true" ng-class="!isFemale ? 'btn-link' : 'btn-warning'">Nainen <i class="icon icon-female"></i></button>
+    <div class="slider-group-container">
+        <div class="row-fluid slider-container">
+            <div class="span1 pull-left">Sukupuoli: </div>
+            <div class="span9">
+                <button class="btn btn-large" ng-click="isFemale = false" ng-class="isFemale ? 'btn-link' : 'btn-warning'">Mies <i class="icon icon-male"></i></button>
+                <button class="btn btn-large" ng-click="isFemale = true" ng-class="!isFemale ? 'btn-link' : 'btn-warning'">Nainen <i class="icon icon-female"></i></button>
+            </div>
+        </div>
+
+        <hr>
+        <br>
+
+        <div class="row-fluid slider-container">
+            <div class="span1 pull-left">Ikä: </div>
+            <div class="span9">
+                <div slider class="slider" bind="age" min="1" max="100" initial="20" postfix="vuotta"></div>
+            </div>
+            <div class="span2 input-append pull-right">
+                <input type="number" class="input-mini" ng-model="age" required/>
+                <span class="add-on">vuotta</span>
+            </div>
+        </div>
+
+        <div class="row-fluid slider-container">
+            <div class="span1 pull-left">Pituus: </div>
+            <div class="span9">
+                <div slider class="slider" bind="height" min="120" max="220" initial="175" postfix="cm"></div>
+            </div>
+            <div class="span2 input-append pull-right">
+                <input type="number" class="input-mini" ng-model="height" required/>
+                <span class="add-on">cm</span>
+            </div>
+        </div>
+
+        <div class="row-fluid slider-container">
+            <div class="span1 pull-left">Paino: </div>
+            <div class="span9">
+                <div slider class="slider" bind="weight" min="40" max="200" initial="80" postfix="kg"></div>
+            </div>
+            <div class="span2 input-append pull-right">
+                <input type="number" class="input-mini" ng-model="weight" required/>
+                <span class="add-on">kg</span>
+            </div>
+        </div>
+
+        <hr>
+        <br>
+        <div class="row-fluid slider-container">
+            <div class="span1 pull-left">Liikunnan määrä: </div>
+            <div class="span9">
+                <div slider class="slider" bind="activity" display-values="activityLevels"></div>
+            </div>
+            <div class="span2 pull-right">
+                <div class="text-center"><em>{{activityDescriptions[activity]}}</em></div>
+            </div>
+        </div>
+
+        <hr>
+        <div class="slider-container text-center">
+            <h5>Ravintoainejakauma:</h5>
+            <p>
+                <span style="min-width:25%">Hiilihydraatti: <span class="badge badge-success">{{distribution.min}}%</span></span>
+                <span style="min-width:25%">Rasva: <span class="badge badge-warning">{{distribution.max - distribution.min}}%</span></span>
+                <span style="min-width:25%">Proteiini: <span class="badge badge-important">{{100 - distribution.max}}%</span></span>
+            </p>
+            <div areaslider class="slider" bind="distribution"></div>
+            <a href="" ng-click="resetDistribution()">Palauta oletusjakauma</a>
+        </div>
+        <hr>
+
+        <div class="row results-container">
+            <div class="span6 offset3 well well-large text-center">
+                Arvioitu energiankulutus: <h3>{{calculateBMR(age, height, weight, activity, isFemale)|number:0}}<small> kcal/päivä</small></h3>
+                <p class="muted nomargin"><small>{{distribution.min / 100 * bmr / 4|number:0}}g hiilihydraatteja</small></p>
+                <p class="muted nomargin"><small>{{(distribution.max - distribution.min) / 100 * bmr / 9|number:0}}g rasvaa</small></p>
+                <p class="muted nomargin"><small>{{(100 - distribution.max) / 100 * bmr / 4|number:0}}g proteiinia</small></p>
+                <br>
+                <div ng-show="errorMessage" class="alert alert-error">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <strong>Virhe!</strong> {{errorMessage}}
+                </div>
+                <button spin-when="loadingGoals" ng-disabled="!bmr || bmr < 0" type="submit" ng-click="setGoals()" class="btn btn-large btn-success">Valmis <i class="icon icon-angle-right"></i></button>
+                <br>
+                <small><a href="http://en.wikipedia.org/wiki/Harris-Benedict_equation" target="_blank">Lähde</a></small>
+            </div>
         </div>
     </div>
-
-    <hr>
-    <br>
-
-    <div class="row-fluid slider-container">
-        <div class="span1 pull-left">Ikä: </div>
-        <div class="span9">
-            <div slider class="slider" bind="age" min="1" max="100" initial="20" postfix="vuotta"></div>
-        </div>
-        <div class="span2 input-append pull-right">
-            <input type="number" class="input-mini" ng-model="age" required/>
-            <span class="add-on">vuotta</span>
-        </div>
-    </div>
-
-    <div class="row-fluid slider-container">
-        <div class="span1 pull-left">Pituus: </div>
-        <div class="span9">
-            <div slider class="slider" bind="height" min="120" max="220" initial="175" postfix="cm"></div>
-        </div>
-        <div class="span2 input-append pull-right">
-            <input type="number" class="input-mini" ng-model="height" required/>
-            <span class="add-on">cm</span>
-        </div>
-    </div>
-
-    <div class="row-fluid slider-container">
-        <div class="span1 pull-left">Paino: </div>
-        <div class="span9">
-            <div slider class="slider" bind="weight" min="40" max="200" initial="80" postfix="kg"></div>
-        </div>
-        <div class="span2 input-append pull-right">
-            <input type="number" class="input-mini" ng-model="weight" required/>
-            <span class="add-on">kg</span>
-        </div>
-    </div>
-
-    <hr>
-    <br>
-    <div class="row-fluid slider-container">
-        <div class="span1 pull-left">Liikunnan määrä: </div>
-        <div class="span9">
-            <div slider class="slider" bind="activity" display-values="activityLevels"></div>
-        </div>
-        <div class="span2 pull-right">
-            <div class="text-center"><em>{{activityDescriptions[activity]}}</em></div>
-        </div>
-    </div>
-
-    <hr>
-    <div class="slider-container text-center">
-        <h5>Ravintoainejakauma:</h5>
-        <p>
-            <span style="min-width:25%">Hiilihydraatti: <span class="badge badge-success">{{distribution.min}}%</span></span>
-            <span style="min-width:25%">Rasva: <span class="badge badge-warning">{{distribution.max - distribution.min}}%</span></span>
-            <span style="min-width:25%">Proteiini: <span class="badge badge-important">{{100 - distribution.max}}%</span></span>
-        </p>
-        <div areaslider class="slider" bind="distribution"></div>
-        <a href="" ng-click="resetDistribution()">Palauta oletusjakauma</a>
-    </div>
-    <hr>
-
-    <div class="row results-container">
-        <div class="span6 offset3 well well-large text-center">
-            Arvioitu energiankulutus: <h3>{{calculateBMR(age, height, weight, activity, isFemale)|number:0}}<small> kcal/päivä</small></h3>
-            <p class="muted nomargin"><small>{{distribution.min / 100 * bmr / 4|number:0}}g hiilihydraatteja</small></p>
-            <p class="muted nomargin"><small>{{(distribution.max - distribution.min) / 100 * bmr / 9|number:0}}g rasvaa</small></p>
-            <p class="muted nomargin"><small>{{(100 - distribution.max) / 100 * bmr / 4|number:0}}g proteiinia</small></p>
-            <br>
-            <button spin-when="loadingGoals" type="submit" ng-click="setGoals()" class="btn btn-large btn-success">Valmis <i class="icon icon-angle-right"></i></button>
-            <br>
-            <small><a href="http://en.wikipedia.org/wiki/Harris-Benedict_equation" target="_blank">Lähde</a></small>
-        </div>
-    </div>
-</div>
 </form>
 
 
