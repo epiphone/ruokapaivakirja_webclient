@@ -7,6 +7,29 @@
 angular.module("app.directives", [])
 
 /**
+ * Bootstrap modal that is shown/hidden when the bound boolean value changes.
+ * Use just like a regular Bootstrap modal, except add a 'modal="x"' attribute,
+ * where x is a scope variable.
+ */
+.directive("modal", function() {
+    return {
+        restrict: "A",
+
+        link: function(scope, element, attrs) {
+            element.modal({show: false});
+
+            // Show/hide modal when the bound variable changes:
+            scope.$watch(attrs.modal, function(newValue) {
+                console.log("asd");
+                var status = newValue ? "show" : "hide";
+                element.modal(status);
+            }, true);
+        }
+    };
+})
+
+
+/**
  * Shows an appended spinner when the bound value is true.
  *
  * If element already has a child icon, it will be replaced by the spinner
@@ -45,6 +68,13 @@ angular.module("app.directives", [])
                 toggleSpinnerFunc(showSpinner);
                 element[0].disabled = showSpinner;
             }, true);
+
+            if (attrs.ngDisabled) {
+                // Hack to make ng-disabled work with our directive:
+                scope.$watch(attrs.ngDisabled, function(isDisabled) {
+                    element[0].disabled = isDisabled;
+                }, true);
+            }
         }
     };
 })

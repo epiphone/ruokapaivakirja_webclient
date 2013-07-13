@@ -1,10 +1,10 @@
  /* global CryptoJS */
-"use strict";
+ "use strict";
 
-/* Services */
+ /* Services */
 
 
-angular.module("app.services", [])
+ angular.module("app.services", [])
 
 // Service for sharing user information between controllers
 .factory("UserService", function(HashService) {
@@ -77,14 +77,14 @@ angular.module("app.services", [])
 
 // Wrapper for API
 .factory("API", function (HashService, UserService, $http) {
-    var appName = "sovelluksen nimi",
-        appKey = "sovelluksen avain",  // TODO turha
-        urlRoot = "http://toimiiks.cloudapp.net/api/json",
-        escape = encodeURIComponent;
+    var appName = "sovelluksen nimi";
+    var appKey = "sovelluksen avain";  // TODO turha
+    var urlRoot = "http://toimiiks.cloudapp.net/api/json";
+    var escape = encodeURIComponent;
 
-        function fetch(url, method, data) {
-            method = method || "GET";
-            data = data || {};
+    function fetch(url, method, data) {
+        method = method || "GET";
+        data = data || {};
 
         // Create a HTTP request, return a promise:
         var options = {

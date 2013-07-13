@@ -17,6 +17,17 @@
 .controller("LoginCtrl", function ($scope, $http, $location, API, UserService) {
     $scope.loginTabSelected = true;
 
+    /** Make an arbitrary request to test connecion, show error if failed. */
+    $scope.establishServerConnection = function() {
+        $scope.connectionStatus = "loading";
+        API.fetch("/foods?q=makkara")
+        .success(function() {
+            $scope.connectionStatus = "connected";
+        }).error(function() {
+            $scope.connectionStatus = "failed";
+        });
+    };
+
     $scope.login = function (username, password) {
         $scope.loading = true;
         UserService.setCredentials(username, password);
@@ -40,14 +51,24 @@
         });
     };
 
-    $scope.register = function (username, password, passwordAgain) {
-        if (password != passwordAgain) {
+    $scope.register = function (form) {
+        if (form.password != form.passwordAgain) {
             $scope.registerMessage = "Varmistus ei täsmää salasanaa";
             return;
         }
 
+        if (form.$valid) {
+            console.log("valid");
+        } else {
+            console.log("invalid");
+            return;
+        }
+        var userApprovalGranted = window.confirm(
+            "Huom! Sovellus on vielä kehitysvaiheessa, joten tietojen säilymistä yms. ylläpitoa ei voida taata.");
+        if (!userApprovalGranted) return;
+
         $scope.loading = true;
-        UserService.setCredentials(username, password);
+        UserService.setCredentials(form.username, form.password);
         var data = {
             username: UserService.getUsername(),
             key: UserService.getPassword()
@@ -80,8 +101,15 @@
             UserService.logout();
             $scope.registerMessage = "Rekisteröinti epäonnistui";
             $scope.loading = false;
+            $scope.$apply();
         });
     };
+
+    $scope.toggleDisclaimer = function(isVisible) {
+        $scope.disclaimerIsVisible = isVisible;
+    };
+
+    $scope.establishServerConnection();
 })
 
 // Goals - user is redirected here after registration to set daily calorie goals etc.

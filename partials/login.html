@@ -1,38 +1,65 @@
 <div class="row">
-  <div class="span4 offset4 login-window">
-    <ul class="nav nav-tabs">
-      <li ng-click="loginTabSelected = true" ng-class="{active:loginTabSelected}"><a href="">Kirjaudu</a>
-      </li>
-      <li ng-click="loginTabSelected = false" ng-class="{active:!loginTabSelected}"><a href="">Rekisteröidy</a></li>
-    </ul>
+  <div ng-switch on="connectionStatus" class="span4 offset4 login-window">
+    <div ng-switch-when="loading" class="text-center">
+      <h3>Yhdistetään palvelimelle...</h3>
+      <i class="icon icon-spin icon-refresh"></i>
+    </div>
+    <div ng-switch-when="failed" class="text-center">
+      <h3>Yhdistäminen epäonnistui</h3>
+      <hr>
+      <button ng-click="establishServerConnection()" class="btn btn-large btn-success">Yritä uudelleen</button>
+    </div>
+    <div ng-switch-default>
+      <ul class="nav nav-tabs">
+        <li ng-click="loginTabSelected = true" ng-class="{active:loginTabSelected}"><a href="">Kirjaudu</a>
+        </li>
+        <li ng-click="loginTabSelected = false" ng-class="{active:!loginTabSelected}"><a href="">Rekisteröidy</a></li>
+      </ul>
 
-    <div ng-switch on="loginTabSelected" class="login-form-container">
-      <div ng-switch-when="true">
-        <form class="form login-form">
-          <legend><h2 class="form-signin-heading">Kirjaudu sisään</h2></legend>
-          <input type="text" ng-init="login.username='aleksi'" ng-model="login.username" class="input-block-level" required autofocus>
-          <input type="password" ng-init="login.password='aleksi'" ng-model="login.password" class="input-block-level" required>
-          <button spin-when="loading" ng-click="login(login.username, login.password)" type="submit" class="btn btn-large btn-primary">Kirjaudu</button>
-          <br>
-          <div ng-show="message" class="alert alert-error">
-            <button ng-click="message=null" type="button" class="close">&times;</button>
-            <strong>Virhe!</strong> {{message}}.
-          </div>
-        </form>
+      <div ng-switch on="loginTabSelected" class="login-form-container text-center">
+        <div ng-switch-when="true">
+          <form class="form login-form">
+            <legend><h2 class="form-signin-heading">Kirjaudu sisään</h2></legend>
+            <input type="text" ng-init="login.username='aleksi'" ng-model="login.username" class="input-block-level" placeholder="Käyttäjänimi" required autofocus>
+            <input type="password" ng-init="login.password='aleksi'" ng-model="login.password" class="input-block-level" placeholder="Salasana" required>
+            <hr>
+            <button spin-when="loading" ng-click="login(login.username, login.password)" type="submit" class="btn btn-large btn-primary">Kirjaudu</button>
+            <br>
+            <div ng-show="message" class="alert alert-error">
+              <button ng-click="message=null" type="button" class="close">&times;</button>
+              <strong>Virhe!</strong> {{message}}.
+            </div>
+          </form>
+        </div>
+        <div ng-switch-when="false">
+          <form name="registerForm" ng-submit="register(registerForm)" class="form login-form">
+            <legend><h2 class="form-signin-heading">Rekisteröidy</h2></legend>
+            <input type="text" ng-model="registerForm.username" name="name" class="input-block-level" placeholder="Käyttäjänimi" required>
+            <input type="password" ng-model="registerForm.password" name="pw" class="input-block-level" placeholder="Salasana" required pattern="^[\d\wäöåÄÖÅ!.-]{8,50}$">
+            <input type="password" ng-model="registerForm.passwordAgain" name="pw2" ng-class="{error: registerForm.pw2.$invalid}" class="input-block-level" placeholder="Salasana uudestaan" required pattern="^[\d\w!äöåÄÖÅ.-]{8,50}$">
+            <hr>
+            <button spin-when="loading" ng-disabled="registerForm.$invalid" class="btn btn-large btn-primary" type="submit">Rekisteröidy</button>
+            <br>
+            <div ng-show="registerMessage" class="alert alert-error">
+              <button ng-click="registerMessage=null" type="button" class="close">&times;</button>
+              <strong>Virhe!</strong> {{registerMessage}}.
+            </div>
+          </form>
+        </div>
       </div>
-      <div ng-switch-when="false">
-        <form class="form login-form">
-          <legend><h2 class="form-signin-heading">Rekisteröidy</h2></legend>
-          <input type="text" ng-model="register.username" class="input-block-level" placeholder="Käyttäjänimi" required>
-          <input type="password" ng-model="register.password" class="input-block-level" placeholder="Salasana" required pattern="[\wäöåÄÖÅ!.-]{8,50}">
-          <input type="password" ng-model="register.passwordAgain" class="input-block-level" placeholder="Salasana uudestaan" required pattern="[\w!äöåÄÖÅ.-]{8,50}">
-          <button spin-when="loading" ng-click="register(register.username, register.password, register.passwordAgain)" class="btn btn-large btn-primary" type="submit">Rekisteröidy</button>
-          <br>
-          <div ng-show="registerMessage" class="alert alert-error">
-            <button ng-click="registerMessage=null" type="button" class="close">&times;</button>
-            <strong>Virhe!</strong> {{registerMessage}}.
-          </div>
-        </form>
+    </div>
+
+    <!-- DISCLAIMER DIALOG -->
+    <div modal="disclaimerIsVisible" class="modal hide fade" tabindex="-1" role="dialog">
+      <div class="modal-header">
+        <h4>Huom!</h4>
+      </div>
+      <div class="modal-body" ng-switch on="addStatus">
+        Sovellus on vielä kehitysvaiheessa, joten tietojen säilymistä tai palvelun ylläpitoa ei voida taata.
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-success" ng-click="register(register.username, register.password, register.passwordAgain)">Hyväksy</button>
+        <button class="btn btn-danger" ng-click="disclaimerIsVisible=false">Peruuta</button>
       </div>
     </div>
   </div>

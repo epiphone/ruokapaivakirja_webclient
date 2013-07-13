@@ -1,6 +1,6 @@
-/*LOGIN PAGE*/
+/* LOGIN PAGE */
 .login-window {
-    /*padding: 20px;*/
+    min-height: 400px;
     padding: 20px 35px;
     background-color: #FFF;
     border-radius: 14px;
