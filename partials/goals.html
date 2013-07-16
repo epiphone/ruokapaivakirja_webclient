@@ -1,10 +1,20 @@
-<div ng-hide="existingGoals" class="alert alert-success">
+<div ng-show="newUser" class="alert alert-success">
     <button type="button" class="close" data-dismiss="alert">&times;</button>
     <strong>Tervetuloa!</strong> Täytä vielä seuraavat tiedot jotta osaamme arvioida energiankulutustasi.
 </div>
-<h2 class="text-center">Energiankulutus</h2>
+<div ng-hide="newUser || updatingGoals" class="text-center">
+    <h3>Nykyiset tavoitteet <small>/vuorokausi</small></h3>
+    <span style="min-width:25%">Energia: <span class="badge badge-info">{{existingGoals.kcal}} kcal</span></span>
+    <span style="min-width:25%">Hiilihydraatti: <span class="badge badge-success">{{existingGoals.carbs}} g</span></span>
+    <span style="min-width:25%">Rasva: <span class="badge badge-warning">{{existingGoals.fat}} g</span></span>
+    <span style="min-width:25%">Proteiini: <span class="badge badge-important">{{existingGoals.protein}} g</span></span>
+    <br>
+    <br>
+    <button ng-click="updatingGoals = true" class="btn btn-large btn-success">Muuta tavoitteita <i class="icon icon-angle-right"></i></button>
+</div>
+
 <hr>
-<form>
+<form ng-show="newUser || updatingGoals">
     <div class="slider-group-container">
         <div class="row-fluid slider-container">
             <div class="span1 pull-left">Sukupuoli: </div>
@@ -86,7 +96,10 @@
                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                     <strong>Virhe!</strong> {{errorMessage}}
                 </div>
-                <button spin-when="loadingGoals" ng-disabled="!bmr || bmr < 0" type="submit" ng-click="setGoals()" class="btn btn-large btn-success">Valmis <i class="icon icon-angle-right"></i></button>
+                <div class="text-center">
+                    <button ng-show="updatingGoals" ng-click="cancelUpdate()" class="btn btn-large btn-danger">Peruuta <i class="icon icon-remove"></i></button>
+                    <button spin-when="loadingGoals" ng-disabled="!bmr || bmr < 0" type="submit" ng-click="setGoals()" class="btn btn-large btn-success">Valmis <i class="icon icon-angle-right"></i></button>
+                </div>
                 <br>
                 <small><a href="http://en.wikipedia.org/wiki/Harris-Benedict_equation" target="_blank">Lähde</a></small>
             </div>

@@ -5,71 +5,50 @@
     <button spin-when="bitesLoading" ng-click="getBites()" class="btn btn-large btn-warning btn-slider">Rajaa</button>
 
 
-    <div ng-switch on="bitesByDate.length">
+    <div ng-switch on="dates.length">
       <div ng-switch-when="0" class="alert alert-error" style="margin-top: 20px;">Ei annoksia valitulla aikavälillä.</div>
       <div ng-switch-default>
         <!-- Chart -->
-        <div linechart bind="chartData" interpolation="linear" style="width:100%;height:300px;"></div>
-        <div class="chart-info">
-          <small>Hiilihydraatti </small><span class="badge badge-success">  </span>
-          <small>Rasva </small><span class="badge badge-important"> </span>
-          <small>Proteiini </small><span class="badge badge-info"> </span>
-          <span class="pull-right"><small>Energia </small><span class="badge badge-info"> </span></span>
+        <div ng-switch on="chartToShow">
+          <div ng-switch-when="linechart">
+            <div linechart bind="lineChartData" interpolation="linear" style="width:100%;height:300px;"></div>
+            <div class="chart-info">
+              <small>Hiilihydraatti </small><span class="badge badge-success">  </span>
+              <small>Rasva </small><span class="badge badge-important"> </span>
+              <small>Proteiini </small><span class="badge badge-info"> </span>
+              <span class="pull-right"><small>Energia </small><span class="badge badge-info"> </span></span>
+            </div>
+          </div>
+          <div ng-switch-when="barchart">
+            <div barchart bind="barChartData" style="width:100%;height:300px;"></div>
+            <div class="chart-info">
+              <small>Hiilihydraatti </small><span class="badge badge-success">  </span>
+              <small>Rasva </small><span class="badge badge-warning"> </span>
+              <small>Proteiini </small><span class="badge badge-warning"> </span>
+              <span class="pull-right"><small>Energia </small><span class="badge badge-info"> </span></span>
+            </div>
+          </div>
         </div>
-
-
-        <ul class="nav nav-tabs">
-          <li ng-click="secondTabSelected = false" ng-class="{active:!secondTabSelected}"><a href="">Päivät</a>
-          </li>
-          <li ng-click="secondTabSelected = true" ng-class="{active:secondTabSelected}"><a href="">Annokset</a></li>
-        </ul>
+        <button ng-click="toggleChart()" class="btn">Vaihda kaaviota</button>
         <!-- List of dates in the selected date range -->
-        <div ng-show="!secondTabSelected">
-          <table class="table">
-            <tr>
-              <th ng-click="datesOrder='date'; datesReverse=!datesReverse">Pvm <i class="icon" ng-class="{hidden:datesOrder != 'date', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
-              <th ng-click="datesOrder='bites.length'; datesReverse=!datesReverse">Annoksia <i class="icon" ng-class="{hidden:datesOrder != 'bites.length', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
-              <th ng-click="datesOrder='kcal'; datesReverse=!datesReverse">Energia <small>kcal</small> <i class="icon" ng-class="{hidden:datesOrder != 'kcal', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
-              <th ng-click="datesOrder='carbs'; datesReverse=!datesReverse">Hiilihydraatti <small>g</small> <i class="icon" ng-class="{hidden:datesOrder != 'carbs', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
-              <th ng-click="datesOrder='fat'; datesReverse=!datesReverse">Rasva <small>g</small> <i class="icon" ng-class="{hidden:datesOrder != 'fat', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
-              <th ng-click="datesOrder='protein'; datesReverse=!datesReverse">Proteiini <small>g</small> <i class="icon" ng-class="{hidden:datesOrder != 'protein', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
-            </tr>
-            <tr ng-repeat="item in bitesByDate|orderBy:datesOrder:datesReverse">
-              <td>{{item.date|date:"d.M.yy"}}</td>
-              <td>{{item.bites.length}}</td>
-              <td>{{item.kcal}}</td>
-              <td>{{item.carbs}}</td>
-              <td>{{item.fat}}</td>
-              <td>{{item.protein}}</td>
-            </tr>
-          </table>
-        </div>
-
-        <!-- List of all bites in the selected date range -->
-        <div ng-show="secondTabSelected">
-          <table class="table">
-            <tr>
-              <th ng-click="bitesOrder='date'; bitesReverse = !bitesReverse">Pvm <i class="icon" ng-class="{hidden:bitesOrder != 'date', 'icon-arrow-down':bitesReverse, 'icon-arrow-up':!bitesReverse}"></i></th>
-              <th ng-click="bitesOrder='name'; bitesReverse = !bitesReverse">Nimi <i class="icon" ng-class="{hidden:bitesOrder != 'name', 'icon-arrow-down':bitesReverse, 'icon-arrow-up':!bitesReverse}"></i></th>
-              <th ng-click="bitesOrder='amount'; bitesReverse = !bitesReverse">Määrä <small>g</small> <i class="icon" ng-class="{hidden:bitesOrder != 'amount', 'icon-arrow-down':bitesReverse, 'icon-arrow-up':!bitesReverse}"></i></th>
-              <th ng-click="bitesOrder='kcal'; bitesReverse = !bitesReverse">Energia <small>kcal</small> <i class="icon" ng-class="{hidden:bitesOrder != 'kcal', 'icon-arrow-down':bitesReverse, 'icon-arrow-up':!bitesReverse}"></i></th>
-              <th ng-click="bitesOrder='carbs'; bitesReverse = !bitesReverse">Hiilihydraatti <small>g</small> <i class="icon" ng-class="{hidden:bitesOrder != 'carbs', 'icon-arrow-down':bitesReverse, 'icon-arrow-up':!bitesReverse}"></i></th>
-              <th ng-click="bitesOrder='fat'; bitesReverse = !bitesReverse">Rasva <small>g</small> <i class="icon" ng-class="{hidden:bitesOrder != 'fat', 'icon-arrow-down':bitesReverse, 'icon-arrow-up':!bitesReverse}"></i></th>
-              <th ng-click="bitesOrder='protein'; bitesReverse = !bitesReverse">Proteiini <small>g</small> <i class="icon" ng-class="{hidden:bitesOrder != 'protein', 'icon-arrow-down':bitesReverse, 'icon-arrow-up':!bitesReverse}"></i></th>
-              <th></th>
-            </tr>
-            <tr ng-repeat="bite in bites|orderBy:bitesOrder:bitesReverse">
-              <td>{{bite.date|date:"d.M.yy"}}</td>
-              <td>{{bite.name|title}}</td>
-              <td>{{bite.amount}}</td>
-              <td>{{bite.kcal}}</td>
-              <td>{{bite.carbs}}</td>
-              <td>{{bite.fat}}</td>
-              <td>{{bite.protein}}</td>
-              <td><button ng-class="{disabled:bite.loading}" ng-click="removeBite(bite)" class="btn btn-small btn-danger">Poista <i ng-show="bite.loading" class="icon-refresh icon-spin"></i></button></td>
-            </tr>
-          </table>
-        </div>
+        <table class="table">
+          <tr>
+            <th ng-click="datesOrder='date'; datesReverse=!datesReverse">Pvm <i class="icon" ng-class="{hidden:datesOrder != 'date', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
+            <th ng-click="datesOrder='count'; datesReverse=!datesReverse">Annoksia <i class="icon" ng-class="{hidden:datesOrder != 'count', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
+            <th ng-click="datesOrder='kcal'; datesReverse=!datesReverse">Energia <small>kcal</small> <i class="icon" ng-class="{hidden:datesOrder != 'kcal', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
+            <th ng-click="datesOrder='carbs'; datesReverse=!datesReverse">Hiilihydraatti <small>g</small> <i class="icon" ng-class="{hidden:datesOrder != 'carbs', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
+            <th ng-click="datesOrder='fat'; datesReverse=!datesReverse">Rasva <small>g</small> <i class="icon" ng-class="{hidden:datesOrder != 'fat', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
+            <th ng-click="datesOrder='protein'; datesReverse=!datesReverse">Proteiini <small>g</small> <i class="icon" ng-class="{hidden:datesOrder != 'protein', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
+          </tr>
+          <tr ng-repeat="date in dates|orderBy:datesOrder:datesReverse">
+            <td>{{date.date|date:"d.M.yy"}}</td>
+            <td>{{date.count}}</td>
+            <td>{{date.kcal}}</td>
+            <td>{{date.carbs}}</td>
+            <td>{{date.fat}}</td>
+            <td>{{date.protein}}</td>
+          </tr>
+        </table>
       </div> <!-- /ng-switch-default -->
     </div> <!-- /ng-switch -->
 

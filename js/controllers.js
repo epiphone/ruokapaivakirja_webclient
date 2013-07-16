@@ -31,10 +31,12 @@
     $scope.login = function (username, password) {
         $scope.loading = true;
         UserService.setCredentials(username, password);
-        API.fetchSigned("/user/favs")
+        API.fetchSigned("/user")
         .success(function(response) {
             if (response.status == "success") {
                 angular.element(".backstretch").remove();  // Remove login page background TODO: directive?
+                UserService.setGoals(response.data.goals);
+                UserService.setFavs(response.data.favs);
                 UserService.isLoggedIn(true);
                 $location.path("/");
             } else {
@@ -57,14 +59,8 @@
             return;
         }
 
-        if (form.$valid) {
-            console.log("valid");
-        } else {
-            console.log("invalid");
-            return;
-        }
         var userApprovalGranted = window.confirm(
-            "Huom! Sovellus on vielä kehitysvaiheessa, joten tietojen säilymistä yms. ylläpitoa ei voida taata.");
+            "Huom! Tietojen säilymistä yms. ylläpitoa ei voida taata.");
         if (!userApprovalGranted) return;
 
         $scope.loading = true;
@@ -115,13 +111,14 @@
 // Goals - user is redirected here after registration to set daily calorie goals etc.
 .controller("GoalsCtrl", function($scope, $location, API, UserService) {
     $scope.existingGoals = UserService.getGoals();
+    $scope.newUser = !$scope.existingGoals;
 
     $scope.activityLevels = [
-        "Ei ollenkaan",
-        "Vähän",
-        "Kohtalaisesti",
-        "Paljon",
-        "Todella paljon"
+    "Ei ollenkaan",
+    "Vähän",
+    "Kohtalaisesti",
+    "Paljon",
+    "Todella paljon"
     ];
 
     $scope.activityDescriptions = [
@@ -133,6 +130,10 @@
     ];
 
     $scope.isFemale = false;
+
+    $scope.cancelUpdate = function() {
+        $location.path("/");
+    };
 
     $scope.calculateBMR = function(age, height, weight, activityLevel, isFemale) {
         var base;
@@ -195,8 +196,9 @@
     // Initial sort order for bites
     $scope.order = "date";
     $scope.reverse = true;
+    $scope.goals = UserService.getGoals();
 
-    // Date object --> "yyyyMMdd"
+    /** Date object -> "yyyyMMdd" */
     function formatDate(d) {
         var monthStr = (d.getMonth() + 1).toString(),
         month = monthStr.length == 1 ? "0" + monthStr : monthStr,
@@ -214,23 +216,32 @@
 
     $scope.getBites = function() {
         if (!$scope.slider) {
-            console.log("slider undefined");
             return;
         }
+
         $scope.bitesLoading = true;
         var params = {
             start: formatDate($scope.slider.min),
             end: formatDate($scope.slider.max)
         };
 
-        API.fetchSigned("/user/bites", "GET", params)
+        API.fetchSigned("/user/days", "GET", params)
         .success(function(response) {
             if (response.status == "success") {
-                $scope.bites = response.data;
-                $scope.bitesOrder = "date"; // Reset table order
+                var date, dates = response.data;
+                dates.forEach(function(d) {
+                    date = new Date(d.date);
+                    date.setHours(0);
+                    d.date = date;
+                });
+
+                $scope.dates = dates.sort(function(a,b){
+                    return a.date - b.date;
+                });
+
                 $scope.datesOrder = "date";
-                processBitesData();
-                updateChart();
+                $scope.datesReverse = true;
+                processChartData();
             } else {
                 console.log("BITES ERROR=" + JSON.stringify(response));
             }
@@ -242,50 +253,6 @@
         });
     };
 
-    function processBitesData() {  // TODO remove redundant processing
-        if (!$scope.bites) {
-            $scope.bitesByDate = null;
-        }
-
-        // Group bites by date
-        var bites = $scope.bites,
-        bite,
-        biteAdded,
-        data = [],
-        attrs = ["kcal", "protein", "fat", "carbs"];  // TODO into global variable?
-
-        for (var i in bites) {
-            bite = bites[i];
-
-            // If array already has an item with the same date, extend the item...
-            biteAdded = false;
-            for (var j in data) {
-                if (data[j].date == bite.date) {
-                    data[j].bites.push(bite);
-                    for (var attrIndex in attrs) {
-                        data[j][attrs[attrIndex]] += bite[[attrs[attrIndex]]];
-                    }
-                    biteAdded = true;
-                }
-            }
-
-            // ...otherwise push a new item
-            if (!biteAdded) {
-                data.push({
-                    date: bite.date,
-                    bites: [bite],
-                    kcal: bite.kcal,
-                    protein: bite.protein,
-                    fat: bite.fat,
-                    carbs: bite.fat
-                });
-            }
-        }
-
-        $scope.bitesByDate = data;
-        $scope.selectedItem = data[0];
-    }
-
     $scope.removeBite = function(bite) {
         bite.loading = true;
         var biteId = bite["_id"];
@@ -293,8 +260,7 @@
         .success(function(response) {
             if (response.status == "success") {
                 $scope.bites.splice($scope.bites.indexOf(bite), 1);
-                processBitesData();
-                updateChart();
+                processChartData();
             } else {
                 alert("Poistaminen epäonnistui!");
                 console.log("BITE REMOVE ERROR=" + JSON.stringify(response));
@@ -308,51 +274,60 @@
         });
     };
 
-    // "yyyyMMdd" --> Date object
-    function parseDate(dt) {
-        return new Date(dt.substr(0, 4), dt.substr(4, 2) - 1, dt.substr(6, 2));
-    }
+    /**
+     * Initialize scope variables lineChartData and barChartData, which are
+     * bound to the charts.
+     */
+     function processChartData() {
+        var lineData = {protein: [], carbs: [], fat: [], kcal: []};
+        var barData = [];
+        var dateObj;
+        var attr;
 
-    function updateChart() {
-        var data = {protein: [], carbs: [], fat: [], kcal: []},
-        bite,
-        foundMatch,
-        maxValue = 0;
+        var dates = $scope.dates;
+        var goals = $scope.goals;
 
-        // Process data
-        for (var i in $scope.bites) {
-            bite = $scope.bites[i];
-            foundMatch = false;
+        for (var i in dates) {
+            dateObj = $scope.dates[i];
 
-            for (var j in data.protein) {
-                if (data.protein[j].date == bite.date) {
-                    data.protein[j].value += bite.protein;
-                    data.carbs[j].value += bite.carbs;
-                    data.fat[j].value += bite.fat;
-                    data.kcal[j].value += bite.kcal;
-
-                    foundMatch = true;
-                    break;
-                }
+            for (var j in Object.keys(lineData)) {
+                attr = Object.keys(lineData)[j];
+                lineData[attr].push({
+                    date: dateObj.date,
+                    value: dateObj[attr]});
             }
 
-            if (!foundMatch) {
-                data.protein.push({date: bite.date, value: bite.protein});
-                data.fat.push({date: bite.date, value: bite.fat});
-                data.carbs.push({date: bite.date, value: bite.carbs});
-                data.kcal.push({date: bite.date, value: bite.kcal});
-            }
+            barData.push({
+                date: dateObj.date,
+                amounts: [
+                { name: "kcal", value: Math.floor(100 * dateObj.kcal / goals.kcal)},
+                { name: "carbs", value: Math.floor(100 * dateObj.carbs / goals.carbs)},
+                { name: "fat", value: Math.floor(100 * dateObj.fat / goals.fat)},
+                { name: "protein", value: Math.floor(100 * dateObj.protein / goals.protein)}
+                ]
+            });
         }
-
-        var chartData = {
-            entries: data,
+        console.log(dates);
+        console.log(lineData);
+        $scope.lineChartData = {
+            entries: lineData,
             minDate: new Date($scope.slider.min),
             maxDate: new Date($scope.slider.max)
         };
-        $scope.chartData = chartData;
+
+        $scope.barChartData = {
+            entries: barData,
+            minDate: new Date($scope.slider.min),
+            maxDate: new Date($scope.slider.max)
+        };
     }
 
+    $scope.toggleChart = function() {
+        $scope.chartToShow = $scope.chartToShow == "linechart" ? "barchart" : "linechart";
+    };
+
     // Load initial bites
+    $scope.chartToShow = "linechart";
     $scope.getBites();
 })
 

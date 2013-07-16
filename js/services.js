@@ -13,6 +13,7 @@
     var loggedIn = false;
     var passwordSalt = "djn12gsiugaieufe4f8fafh";
     var goals;
+    var favs;
 
     function getUsername() { return username; }
     function getPassword() { return password; }
@@ -38,6 +39,9 @@
     function getGoals() { return goals; }
     function setGoals(newGoals) { goals = newGoals; }
 
+    function getFavs() { return favs; }
+    function setFavs(newFavs) { favs = newFavs; }
+
     return {
         getUsername: getUsername,
         getPassword: getPassword,
@@ -45,7 +49,9 @@
         setCredentials: setCredentials,
         logout: logout,
         getGoals: getGoals,
-        setGoals: setGoals
+        setGoals: setGoals,
+        getFavs: getFavs,
+        setFavs: setFavs
     };
 })
 

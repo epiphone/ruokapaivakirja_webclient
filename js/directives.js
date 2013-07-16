@@ -20,7 +20,6 @@ angular.module("app.directives", [])
 
             // Show/hide modal when the bound variable changes:
             scope.$watch(attrs.modal, function(newValue) {
-                console.log("asd");
                 var status = newValue ? "show" : "hide";
                 element.modal(status);
             }, true);
@@ -85,6 +84,10 @@ angular.module("app.directives", [])
  .directive("datepicker", function($timeout) {
     return {
         restrict: "A",
+
+        scope: {
+            bind: "=datepicker"
+        },
 
         link: function(scope, element, attrs) {
             // Initialize datepicker
@@ -282,7 +285,7 @@ angular.module("app.directives", [])
         link: function(scope, element, attrs) {
             var maxValue = scope.maxValue || 30;
             var today = new Date(new Date().toDateString());
-            console.log("scope.bind.min=" + scope.bind.min);
+
             var min = maxValue - Math.abs(today.getDate() - scope.bind.min.getDate());
             var max = maxValue - Math.abs(today.getDate() - scope.bind.max.getDate());
 
@@ -321,6 +324,159 @@ angular.module("app.directives", [])
 
 
 /**
+ * A responsive barchart with grouped bars.
+ */
+.directive("barchart", function($window) {
+    return {
+        restrict: "A",
+
+        scope: {
+            bind: "="
+        },
+
+        link: function(scope, element, attrs) {
+            var data = null;
+            var margin = {top: 20, right: 40, bottom: 30, left: 40};
+
+            // Create scales
+            var x0 = d3.scale.ordinal();
+            var x1 = d3.scale.ordinal();
+            var y = d3.scale.linear();
+
+            // Create axes
+            var xAxis = d3.svg.axis()
+            .scale(x0)
+            .orient("bottom")
+            .ticks(d3.time.days, 1)
+            .tickFormat(d3.time.format("%-d.%-m"));
+
+            var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("right")
+            .ticks(6);
+
+            var color = d3.scale.ordinal()
+            .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b"]);
+
+            // Append root svg element
+            var svg = d3.select(element[0])
+            .append("svg")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .append("g")
+            .attr("class", "chartContainer")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            // Append the axes
+            svg.append("g")
+            .attr("class", "x axis");
+
+            svg.append("g")
+            .attr("class", "y left axis");
+
+            svg.append("g")
+            .attr("class", "y right axis");
+
+            // Append the axis labels
+            svg.append("text")
+            .attr("x", 10)
+            .attr("y", 10)
+            .attr("class", "axis-label y left")
+            .style("text-anchor", "middle")
+            .style("display", "none")
+            .text("g");
+
+            svg.append("text")
+            .attr("class", "axis-label y right")
+            .attr("x", -20)
+            .attr("y", 10)
+            .style("text-anchor", "middle")
+            .style("display", "none")
+            .text("kcal");
+
+            // This is called when the bound data changes...
+            scope.$watch("bind", function(newData) {
+                data = newData;
+                update(true);
+            }, true);
+
+            // ...and this when the window is resized
+            var resizeTimer;
+            angular.element($window).bind("resize", function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function(){
+                    update(false);
+                }, 100);
+            });
+
+            /** Resets the chart data, resizes the chart */
+            function update(init) {
+                if (!data) {
+                    return;
+                }
+                var entries = data.entries;
+                console.log(entries);
+                var barNames = ["kcal", "carbs", "fat", "protein"];
+                // entries.forEach(function(d) {
+                //     d.amounts = barNames.map(function(name) { return {name: name, value: d[name]}; });
+                // });
+
+                // Read container size, update chart size accordingly
+                var chartWidth = element[0].getBoundingClientRect().width - margin.left - margin.right;
+                var chartHeight = element[0].getBoundingClientRect().height - margin.top - margin.bottom;
+
+                x0.rangeRoundBands([0, chartWidth], 0.1)
+                .domain(entries.map(function(d) { return d.date; }));
+
+                x1.domain(barNames)
+                .rangeRoundBands([0, x0.rangeBand()]);
+
+                y.domain([0, d3.max(entries, function(d) { return d3.max(d.amounts, function(d) { return d.value; }); })])
+                .range([chartHeight, 0]);
+
+                svg.attr("width", chartWidth + margin.left + margin.right)
+                .attr("height", chartHeight + margin.top + margin.bottom);
+
+                // AXES
+
+                svg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + chartHeight + ")")
+                .call(xAxis);
+
+                svg.append("g")
+                .attr("class", "y axis")
+                .call(yAxis)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("% Tavoitteesta");
+
+                // DATE GROUPS
+
+                var dates = svg.selectAll(".date")
+                .data(entries)
+                .enter().append("g")
+                .attr("class", "g")
+                .attr("transform", function(d) { return "translate(" + x0(d.date) + ",0)"; });
+
+                dates.selectAll("rect")
+                .data(function(d) { return d.amounts; })
+                .enter().append("rect")
+                .attr("width", x1.rangeBand())
+                .attr("x", function(d) { return x1(d.name); })
+                .attr("y", function(d) { return y(d.value); })
+                .attr("height", function(d) { return chartHeight - y(d.value); })
+                .style("fill", function(d) { return color(d.name); });
+
+            }
+        }
+    };
+})
+
+/**
  * A responsive linechart with multiple lines and an area.
  *
  * Example: <div linechart bind="data" interpolation="linear"></div>
@@ -331,13 +487,13 @@ angular.module("app.directives", [])
 
         scope: {
             bind:          "=",
-            interpolation: "="
+            interpolation: "=",
+            goals:         "="
         },
 
         link: function(scope, element, attrs) {
             var data = null;
             var margin = {top: 20, right: 40, bottom: 30, left: 40};
-            var parseDate = d3.time.format("%Y-%m-%dT%H:%M:%S").parse;
 
             // Create scales
             var x = d3.time.scale();
@@ -363,12 +519,12 @@ angular.module("app.directives", [])
 
             // Create line & area generators
             var line = d3.svg.line()
-            .x(function(d) { return x(parseDate(d.date)); })
+            .x(function(d) { return x(d.date); })
             .y(function(d) { return y(d.value); })
             .interpolate(attrs.interpolation ? attrs.interpolation : "linear");
 
             var area = d3.svg.area()
-            .x(function(d) { return x(parseDate(d.date)); })
+            .x(function(d) { return x(d.date); })
             .y1(function(d) { return yKcal(d.value); });
 
             // Append root svg element

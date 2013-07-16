@@ -28,7 +28,7 @@
     <div ng-switch-when="false">
       <h3>{{food.name|title}}</h3>
 
-      Annos: <input type="number" class="input-mini" ng-model="bite.amount" min="1" max="10000" required/> grammaa
+      Annos: <input type="number" class="input-mini" ng-model="bite.amount" min="1" max="10000" required/> g
       <div ng-switch on="foodInFavourites(food['_id'])" class="pull-right">
         <button class="btn btn-success" ng-click="openModal()">Lisää annos <i class="icon-plus icon-white"></i></button>
         <button  ng-switch-when="true" class="btn btn-danger" ng-click="removeFavourite(food['_id'])">Poista suosikeista <i ng-class="favouriteLoading ? 'icon-refresh icon-spin' : 'icon-remove'" class="icon-white"></i></button>
@@ -73,7 +73,7 @@
       <div ng-switch-when="error">Annoksen lisääminen epäonnistui</div>
       <div ng-show="addStatus=='started'">
         <p>{{food.name|title}}, <strong>{{bite.amount}}g</strong></p>
-        <div datepicker bind="selectedDate" id="datepicker"></div>
+        <div datepicker="selectedDate" id="datepicker"></div>
       </div>
     </div>
     <div class="modal-footer">
