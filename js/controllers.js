@@ -192,7 +192,7 @@
 })
 
 // Index - list bites
-.controller("IndexCtrl", function($scope, $location, API, UserService) {
+.controller("IndexCtrl", function($scope, $location, $timeout, API, UserService) {
     // Initial sort order for bites
     $scope.order = "date";
     $scope.reverse = true;
@@ -307,8 +307,6 @@
                 ]
             });
         }
-        console.log(dates);
-        console.log(lineData);
         $scope.lineChartData = {
             entries: lineData,
             minDate: new Date($scope.slider.min),
@@ -320,9 +318,21 @@
             minDate: new Date($scope.slider.min),
             maxDate: new Date($scope.slider.max)
         };
+
+        blockChartButtons();
+    }
+
+    /**
+     * Blocks the buttons that hightlight chart lines or bars for a second,
+     * so that a transition doesn't get interrupted by the user.
+     */
+    function blockChartButtons() {
+        $scope.chartLoading = true;
+        $timeout(function() { $scope.chartLoading = false; }, 1000);
     }
 
     $scope.toggleChart = function() {
+        blockChartButtons();
         $scope.chartToShow = $scope.chartToShow == "linechart" ? "barchart" : "linechart";
     };
 

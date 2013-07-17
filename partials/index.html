@@ -10,22 +10,30 @@
       <div ng-switch-default>
         <!-- Chart -->
         <div ng-switch on="chartToShow">
+
+          <!-- Line chart -->
           <div ng-switch-when="linechart">
-            <div linechart bind="lineChartData" interpolation="linear" style="width:100%;height:300px;"></div>
-            <div class="chart-info">
-              <small>Hiilihydraatti </small><span class="badge badge-success">  </span>
-              <small>Rasva </small><span class="badge badge-important"> </span>
-              <small>Proteiini </small><span class="badge badge-info"> </span>
-              <span class="pull-right"><small>Energia </small><span class="badge badge-info"> </span></span>
+            <div linechart bind="lineChartData" selected="selectedLine" interpolation="linear" style="width:100%;height:300px;"></div>
+            <div class="chart-info text-center">
+              <div class="btn-group">
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-primary" ng-click="selectedLine= selectedLine == 'kcal' ? null : 'kcal'" ng-class="{'disabled faded': selectedLine != 'kcal'}">Energia</button>
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-success" ng-click="selectedLine= selectedLine == 'carbs' ? null : 'carbs'" ng-class="{'disabled faded': selectedLine != 'carbs'}">Hiilihydraatti</button>
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-warning" ng-click="selectedLine= selectedLine == 'fat' ? null : 'fat'" ng-class="{'disabled faded': selectedLine != 'fat'}">Rasva</button>
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-danger" ng-click="selectedLine= selectedLine == 'protein' ? null : 'protein'" ng-class="{'disabled faded': selectedLine != 'protein'}">Proteiini</button>
+              </div>
             </div>
           </div>
+
+          <!-- Bar chart -->
           <div ng-switch-when="barchart">
-            <div barchart bind="barChartData" style="width:100%;height:300px;"></div>
-            <div class="chart-info">
-              <small>Hiilihydraatti </small><span class="badge badge-success">  </span>
-              <small>Rasva </small><span class="badge badge-warning"> </span>
-              <small>Proteiini </small><span class="badge badge-warning"> </span>
-              <span class="pull-right"><small>Energia </small><span class="badge badge-info"> </span></span>
+            <div barchart bind="barChartData" selected="selectedBar" style="width:100%;height:300px;"></div>
+            <div class="chart-info text-center">
+              <div class="btn-group">
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-primary" ng-click="selectedBar=selectedBar == 'kcal' ? null : 'kcal'" ng-class="{'disabled faded': selectedBar != 'kcal'}">Energia</button>
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-success" ng-click="selectedBar=selectedBar == 'carbs' ? null : 'carbs'" ng-class="{'disabled faded': selectedBar != 'carbs'}">Hiilihydraatti</button>
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-warning" ng-click="selectedBar=selectedBar == 'fat' ? null : 'fat'" ng-class="{'disabled faded': selectedBar != 'fat'}">Rasva</button>
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-danger" ng-click="selectedBar=selectedBar == 'protein' ? null : 'protein'" ng-class="{'disabled faded': selectedBar != 'protein'}">Proteiini</button>
+              </div>
             </div>
           </div>
         </div>

@@ -80,13 +80,14 @@
     height: 100%;
 }
 
-.ui-datepicker-current-day {
-
+/* MAIN PAGE */
+.chart-info .btn-group button {
+    min-width: 100px;
 }
 
 /* LINE CHART */
 path {
-    stroke: steelblue;
+    stroke: #4682B4;
     stroke-width: 2;
     fill: none;
 }
@@ -96,7 +97,11 @@ path.carbs {
 }
 
 path.fat {
-    stroke: #AA3728;
+    stroke: #F89406;
+}
+
+path.protein {
+    stroke: #B94A48;
 }
 
 .axis path,
@@ -116,6 +121,25 @@ path.fat {
     fill: #e5f3f9;
     fill-opacity: 0.8;
 }
+
+/* BAR CHART */
+
+.bar.kcal {
+    fill: #4682B4;
+}
+
+.bar.carbs {
+    fill: #52B125;
+}
+
+.bar.fat {
+    fill: #F3AC2E;
+}
+
+.bar.protein {
+    fill: #B94A48;
+}
+
 
 
 /*GOALS PAGE*/
@@ -173,6 +197,10 @@ path.fat {
 
 
 /*UTILITIES*/
+.faded {
+    opacity: 0.4 !important;
+}
+
 .notransition {
     -webkit-transition: none !important;
     -moz-transition: none !important;

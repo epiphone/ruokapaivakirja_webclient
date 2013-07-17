@@ -7,11 +7,34 @@
 angular.module("app.directives", [])
 
 /**
+ * A simple directive for disabling the element for a second when
+ * the window is resized.
+ *
+ * This is used to prevent the user from interrupting chart transitions.
+ */
+.directive("disabledOnResize", function($window, $timeout) {
+    return {
+        restrict: "A",
+
+        link: function(scope, element, attrs) {
+            var resizeTimer;
+            angular.element($window).bind("resize", function() {
+                clearTimeout(resizeTimer);
+                element[0].disabled = true;
+                resizeTimer = setTimeout(function(){
+                    element[0].disabled = false;
+                }, 1000);
+            });
+        }
+    };
+})
+
+/**
  * Bootstrap modal that is shown/hidden when the bound boolean value changes.
  * Use just like a regular Bootstrap modal, except add a 'modal="x"' attribute,
  * where x is a scope variable.
  */
-.directive("modal", function() {
+ .directive("modal", function() {
     return {
         restrict: "A",
 
@@ -35,7 +58,7 @@ angular.module("app.directives", [])
  * icon when spinning.
  * Example: <button spin-when="loading">OK<button>
  */
-.directive("spinWhen", function($compile) {
+ .directive("spinWhen", function($compile) {
     return {
         restrict: "A",
 
@@ -52,15 +75,15 @@ angular.module("app.directives", [])
                 };
 
             // Element doesn't have an icon, add a new icon:
-            } else {
-                element.append(
-                    " <i class='icon icon-spin icon-refresh' style='display:none;'></i>");
-                toggleSpinnerFunc = function(showSpinner) {
-                    showSpinner ? spinner.show() : spinner.hide();
-                };
-            }
+        } else {
+            element.append(
+                " <i class='icon icon-spin icon-refresh' style='display:none;'></i>");
+            toggleSpinnerFunc = function(showSpinner) {
+                showSpinner ? spinner.show() : spinner.hide();
+            };
+        }
 
-            spinner = element.children(".icon");
+        spinner = element.children(".icon");
 
             // This is called when the bound variable changes:
             scope.$watch(attrs.spinWhen, function(showSpinner) {
@@ -326,12 +349,13 @@ angular.module("app.directives", [])
 /**
  * A responsive barchart with grouped bars.
  */
-.directive("barchart", function($window) {
+ .directive("barchart", function($window) {
     return {
         restrict: "A",
 
         scope: {
-            bind: "="
+            bind:     "=",
+            selected: "=" // null|"kcal"|"fat"|"protein"|"carbs"
         },
 
         link: function(scope, element, attrs) {
@@ -352,11 +376,7 @@ angular.module("app.directives", [])
 
             var yAxis = d3.svg.axis()
             .scale(y)
-            .orient("right")
-            .ticks(6);
-
-            var color = d3.scale.ordinal()
-            .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b"]);
+            .orient("left");
 
             // Append root svg element
             var svg = d3.select(element[0])
@@ -379,28 +399,19 @@ angular.module("app.directives", [])
 
             // Append the axis labels
             svg.append("text")
-            .attr("x", 10)
+            .attr("x", 50)
             .attr("y", 10)
             .attr("class", "axis-label y left")
             .style("text-anchor", "middle")
             .style("display", "none")
-            .text("g");
+            .text("% tavoitteesta");
 
-            svg.append("text")
-            .attr("class", "axis-label y right")
-            .attr("x", -20)
-            .attr("y", 10)
-            .style("text-anchor", "middle")
-            .style("display", "none")
-            .text("kcal");
-
-            // This is called when the bound data changes...
+            // Create event listeners
             scope.$watch("bind", function(newData) {
                 data = newData;
                 update(true);
             }, true);
 
-            // ...and this when the window is resized
             var resizeTimer;
             angular.element($window).bind("resize", function() {
                 clearTimeout(resizeTimer);
@@ -409,27 +420,43 @@ angular.module("app.directives", [])
                 }, 100);
             });
 
+            scope.$watch("selected", function(newSelected) {
+                if (newSelected === undefined) return;
+
+                if (!newSelected) {
+                    setOpacity(".bar", 1);
+                    return;
+                }
+
+                setOpacity(".bar:not(." + newSelected + ")", 0.2);
+                setOpacity(".bar." + newSelected, 1);
+            });
+
+            function setOpacity(className, opacity) {
+                svg.selectAll(className)
+                .transition().duration(750)
+                .style("opacity", opacity);
+            }
+
             /** Resets the chart data, resizes the chart */
             function update(init) {
                 if (!data) {
                     return;
                 }
+
                 var entries = data.entries;
-                console.log(entries);
                 var barNames = ["kcal", "carbs", "fat", "protein"];
-                // entries.forEach(function(d) {
-                //     d.amounts = barNames.map(function(name) { return {name: name, value: d[name]}; });
-                // });
 
                 // Read container size, update chart size accordingly
                 var chartWidth = element[0].getBoundingClientRect().width - margin.left - margin.right;
                 var chartHeight = element[0].getBoundingClientRect().height - margin.top - margin.bottom;
-
+                if (chartHeight < 0) return;
+                console.log("chartHeight=" + chartHeight);
                 x0.rangeRoundBands([0, chartWidth], 0.1)
                 .domain(entries.map(function(d) { return d.date; }));
 
                 x1.domain(barNames)
-                .rangeRoundBands([0, x0.rangeBand()]);
+                .rangeRoundBands([0, x0.rangeBand()], 0.05);
 
                 y.domain([0, d3.max(entries, function(d) { return d3.max(d.amounts, function(d) { return d.value; }); })])
                 .range([chartHeight, 0]);
@@ -437,40 +464,53 @@ angular.module("app.directives", [])
                 svg.attr("width", chartWidth + margin.left + margin.right)
                 .attr("height", chartHeight + margin.top + margin.bottom);
 
-                // AXES
+                // AXES & LABEL
+                // If updating chart, animate the axes, otherwise just enter
+                var t = init ? svg : svg.transition().duration(750);
 
-                svg.append("g")
-                .attr("class", "x axis")
+                t.select(".x.axis")
                 .attr("transform", "translate(0," + chartHeight + ")")
                 .call(xAxis);
 
-                svg.append("g")
+                t.select(".y.axis")
                 .attr("class", "y axis")
-                .call(yAxis)
-                .append("text")
-                .attr("transform", "rotate(-90)")
-                .attr("y", 6)
-                .attr("dy", ".71em")
-                .style("text-anchor", "end")
-                .text("% Tavoitteesta");
+                .call(yAxis);
 
-                // DATE GROUPS
+                t.selectAll(".axis-label")
+                .style("display", "block");
 
-                var dates = svg.selectAll(".date")
-                .data(entries)
-                .enter().append("g")
-                .attr("class", "g")
+                // BAR GROUPS
+                var groups = svg.selectAll(".group")
+                .data(entries);
+
+                groups.transition()
+                .duration(750)
                 .attr("transform", function(d) { return "translate(" + x0(d.date) + ",0)"; });
 
-                dates.selectAll("rect")
-                .data(function(d) { return d.amounts; })
-                .enter().append("rect")
+                groups.enter().append("g")
+                .attr("class", "g group")
+                .attr("transform", function(d) { return "translate(" + x0(d.date) + ",0)"; });
+
+                // BARS INSIDE A GROUP
+                var bars = groups.selectAll("rect")
+                .data(function(d) { return d.amounts; });
+
+                bars.transition()
+                .duration(750)
                 .attr("width", x1.rangeBand())
                 .attr("x", function(d) { return x1(d.name); })
                 .attr("y", function(d) { return y(d.value); })
-                .attr("height", function(d) { return chartHeight - y(d.value); })
-                .style("fill", function(d) { return color(d.name); });
+                .attr("height", function(d) { return chartHeight - y(d.value); });
 
+                bars.enter().append("rect")
+                .attr("class", function(d) { return "bar " + d.name; })
+                .attr("width", x1.rangeBand())
+                .attr("x", function(d) { return x1(d.name); })
+                .attr("y", chartHeight)
+                .attr("height", 0)
+                .transition().duration(2000).ease("elastic")
+                .attr("y", function(d) { return y(d.value); })
+                .attr("height", function(d) { return chartHeight - y(d.value); });
             }
         }
     };
@@ -487,8 +527,8 @@ angular.module("app.directives", [])
 
         scope: {
             bind:          "=",
-            interpolation: "=",
-            goals:         "="
+            selected:      "=", // null|"kcal"|"fat"|"protein"|"carbs"
+            interpolation: "@" // "cardinal"|"linear" etc.
         },
 
         link: function(scope, element, attrs) {
@@ -521,7 +561,7 @@ angular.module("app.directives", [])
             var line = d3.svg.line()
             .x(function(d) { return x(d.date); })
             .y(function(d) { return y(d.value); })
-            .interpolate(attrs.interpolation ? attrs.interpolation : "linear");
+            .interpolate(scope.interpolation || "linear");
 
             var area = d3.svg.area()
             .x(function(d) { return x(d.date); })
@@ -563,13 +603,33 @@ angular.module("app.directives", [])
             .style("display", "none")
             .text("kcal");
 
-            // This is called when the bound data changes...
+            // Create event listeners
             scope.$watch("bind", function(newData) {
                 data = newData;
                 update(true);
             }, true);
 
-            // ...and this when the window is resized
+            scope.$watch("selected", function(newSelected) {
+                if (newSelected === undefined) {
+                    return;
+                }
+
+                if (!newSelected) {
+                    setOpacity(".line", 1);
+                } else if (newSelected == "kcal") {
+                    setOpacity(".line", 0.2);
+                } else {
+                    setOpacity(".line:not(." + newSelected + ")", 0.2);
+                    setOpacity("." + newSelected, 1);
+                }
+            }, true);
+
+            function setOpacity(className, opacity) {
+                svg.selectAll(className)
+                .transition().duration(750)
+                .style("opacity", opacity);
+            }
+
             var resizeTimer;
             angular.element($window).bind("resize", function() {
                 clearTimeout(resizeTimer);
@@ -578,7 +638,7 @@ angular.module("app.directives", [])
                 }, 100);
             });
 
-            /** Resets the chart data, resizes the chart */
+            /** Resets the chart data, resizes the chart. */
             function update(init) {
                 if (!data) {
                     return;
@@ -611,7 +671,6 @@ angular.module("app.directives", [])
                 // If updating chart, animate the axes, otherwise just enter
                 var t = init ? svg : svg.transition().duration(750);
 
-
                 // AXES
                 t.select(".x")
                 .attr("transform", "translate(0," + chartHeight + ")")
@@ -624,14 +683,12 @@ angular.module("app.directives", [])
                 .attr("transform", "translate(" + chartWidth + ",0)")
                 .call(yRightAxis);
 
-
                 // AXIS LABELS
                 t.select(".axis-label.right")
                 .attr("transform", "translate(" + chartWidth + ",0)");
 
                 t.selectAll(".axis-label")
                 .style("display", "block");
-
 
                 // AREA
                 area.y0(chartHeight);
@@ -643,14 +700,13 @@ angular.module("app.directives", [])
                 .attr("d", area);
 
                 areas.enter().append("path")
-                .attr("class", "area fill")
+                .attr("class", "area fill kcal")
                 .attr("d", area)
                 .attr("transform", "translate(0," + chartHeight + "), scale(1, 0)")
                 .transition()
                 .duration(2000)
                 .ease("elastic")
                 .attr("transform", "translate(0, 0), scale(1, 1)");
-
 
                 // LINES
                 var lines = svg.selectAll(".line")
@@ -664,11 +720,15 @@ angular.module("app.directives", [])
                 lines.enter().append("path")
                 .attr("class", function(d) { return "line " + d.key; })
                 .attr("d", function(d) { return line(d.value); })
-                .attr("stroke-dasharray", function(d) { return  "0 " + this.getTotalLength(); })
+                .attr("stroke-dasharray", function(d) {
+                    return  "0 " + this.getTotalLength();
+                })
                 .transition()
                 .duration(1000)
                 .delay(function(d, i) { return i * 100; })
-                .attr("stroke-dasharray", function(d) { return this.getTotalLength() + " " + this.getTotalLength(); });
+                .attr("stroke-dasharray", function(d) {
+                    return this.getTotalLength() + " " + this.getTotalLength();
+                });
             }
 
             svg.selectAll("text")
