@@ -2,9 +2,9 @@
 
   <!-- FOOD SEARCH & RESULTS -->
   <div class="span6 food-search">
-    <div class="input-append">
+    <div class="input-append span6">
       <input type="text" ng-model="query" ng-change="search(query)" autofocus="autofocus" placeholder="Hae elintarvikkeita">
-      <button class="btn btn-primary" type="button"><i ng-class="queryLoading ? 'icon-refresh icon-spin' : 'icon-search'" class="icon-white"></i></button>
+      <button spin-when="queryLoading" ng-click="search(query)" class="btn btn-primary" type="button"><i class="icon icon-white icon-search"></i></button>
     </div>
     <!-- FAVOURITES -->
     <div ng-show="favourites.length > 0" class="favourites">

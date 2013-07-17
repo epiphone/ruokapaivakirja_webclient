@@ -16,10 +16,13 @@
             <div linechart bind="lineChartData" selected="selectedLine" interpolation="linear" style="width:100%;height:300px;"></div>
             <div class="chart-info text-center">
               <div class="btn-group">
-                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-primary" ng-click="selectedLine= selectedLine == 'kcal' ? null : 'kcal'" ng-class="{'disabled faded': selectedLine != 'kcal'}">Energia</button>
-                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-success" ng-click="selectedLine= selectedLine == 'carbs' ? null : 'carbs'" ng-class="{'disabled faded': selectedLine != 'carbs'}">Hiilihydraatti</button>
-                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-warning" ng-click="selectedLine= selectedLine == 'fat' ? null : 'fat'" ng-class="{'disabled faded': selectedLine != 'fat'}">Rasva</button>
-                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-danger" ng-click="selectedLine= selectedLine == 'protein' ? null : 'protein'" ng-class="{'disabled faded': selectedLine != 'protein'}">Proteiini</button>
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-primary" ng-click="selectedLine= selectedLine == 'kcal' ? null : 'kcal'" ng-class="{'disabled faded': selectedLine && selectedLine != 'kcal'}">Energia</button>
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-success" ng-click="selectedLine= selectedLine == 'carbs' ? null : 'carbs'" ng-class="{'disabled faded': selectedLine && selectedLine != 'carbs'}">Hiilihydraatti</button>
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-warning" ng-click="selectedLine= selectedLine == 'fat' ? null : 'fat'" ng-class="{'disabled faded': selectedLine && selectedLine != 'fat'}">Rasva</button>
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-danger" ng-click="selectedLine= selectedLine == 'protein' ? null : 'protein'" ng-class="{'disabled faded': selectedLine && selectedLine != 'protein'}">Proteiini</button>
+                <br>
+                <br>
+                <button disabled-on-resize ng-click="toggleChart()" ng-disabled="chartLoading" class="btn">Näytä % tavoitteista</button>
               </div>
             </div>
           </div>
@@ -29,15 +32,18 @@
             <div barchart bind="barChartData" selected="selectedBar" style="width:100%;height:300px;"></div>
             <div class="chart-info text-center">
               <div class="btn-group">
-                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-primary" ng-click="selectedBar=selectedBar == 'kcal' ? null : 'kcal'" ng-class="{'disabled faded': selectedBar != 'kcal'}">Energia</button>
-                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-success" ng-click="selectedBar=selectedBar == 'carbs' ? null : 'carbs'" ng-class="{'disabled faded': selectedBar != 'carbs'}">Hiilihydraatti</button>
-                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-warning" ng-click="selectedBar=selectedBar == 'fat' ? null : 'fat'" ng-class="{'disabled faded': selectedBar != 'fat'}">Rasva</button>
-                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-danger" ng-click="selectedBar=selectedBar == 'protein' ? null : 'protein'" ng-class="{'disabled faded': selectedBar != 'protein'}">Proteiini</button>
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-primary" ng-click="selectedBar=selectedBar == 'kcal' ? null : 'kcal'" ng-class="{'disabled faded': selectedBar && selectedBar != 'kcal'}">Energia</button>
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-success" ng-click="selectedBar=selectedBar == 'carbs' ? null : 'carbs'" ng-class="{'disabled faded': selectedBar && selectedBar != 'carbs'}">Hiilihydraatti</button>
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-warning" ng-click="selectedBar=selectedBar == 'fat' ? null : 'fat'" ng-class="{'disabled faded': selectedBar && selectedBar != 'fat'}">Rasva</button>
+                <button disabled-on-resize ng-disabled="chartLoading" class="btn btn-danger" ng-click="selectedBar=selectedBar == 'protein' ? null : 'protein'" ng-class="{'disabled faded': selectedBar && selectedBar != 'protein'}">Proteiini</button>
+                <br>
+                <br>
+                <button disabled-on-resize ng-disabled="chartLoading" ng-click="toggleChart()" class="btn">Näytä grammat</button>
               </div>
             </div>
           </div>
         </div>
-        <button ng-click="toggleChart()" class="btn">Vaihda kaaviota</button>
+
         <!-- List of dates in the selected date range -->
         <table class="table">
           <tr>
