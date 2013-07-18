@@ -30,28 +30,6 @@ angular.module("app.directives", [])
 })
 
 /**
- * Bootstrap modal that is shown/hidden when the bound boolean value changes.
- * Use just like a regular Bootstrap modal, except add a 'modal="x"' attribute,
- * where x is a scope variable.
- */
- .directive("modal", function() {
-    return {
-        restrict: "A",
-
-        link: function(scope, element, attrs) {
-            element.modal({show: false});
-
-            // Show/hide modal when the bound variable changes:
-            scope.$watch(attrs.modal, function(newValue) {
-                var status = newValue ? "show" : "hide";
-                element.modal(status);
-            }, true);
-        }
-    };
-})
-
-
-/**
  * Shows an appended spinner when the bound value is true.
  *
  * If element already has a child icon, it will be replaced by the spinner
@@ -406,6 +384,13 @@ angular.module("app.directives", [])
             .style("display", "none")
             .text("% tavoitteesta");
 
+            // Append a horizontal line showing the 100% mark
+            svg.append("line")
+            .attr("class", "goal-line")
+            .attr("stroke-width", 1)
+            .style("stroke-dasharray", "10, 5")
+            .attr("stroke", "#9B9B9B");
+
             // Create event listeners
             scope.$watch("bind", function(newData) {
                 data = newData;
@@ -478,6 +463,13 @@ angular.module("app.directives", [])
 
                 t.selectAll(".axis-label")
                 .style("display", "block");
+
+                // HORIZONTAL LINE @ 100%
+                t.select(".goal-line")
+                .attr("x1", 0)
+                .attr("x2", chartWidth)
+                .attr("y1", y(100))
+                .attr("y2", y(100));
 
                 // BAR GROUPS
                 var groups = svg.selectAll(".group")

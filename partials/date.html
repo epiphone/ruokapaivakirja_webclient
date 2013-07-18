@@ -1,0 +1,26 @@
+<h2>{{date|date:"d.M.yy"}} <small>Annokset</small>
+    <a href="#/" class="btn btn-large btn-danger pull-right"><i class="icon icon-angle-left icon-white"></i> Takaisin</a>
+</h2>
+<div ng-show="bites.length == 0">
+    Ladataan... <i class="icon icon-white icon-spin icon-refresh"></i>
+</div>
+<table class="table">
+  <tr>
+    <th ng-init="order='name'" ng-click="order='name'; reverse=!reverse">Elintarvike <i class="icon" ng-class="{hidden:order != 'name', 'icon-arrow-down':reverse, 'icon-arrow-up':!reverse}"></i></th>
+    <th ng-click="order='amount'; reverse=!reverse">Määrä <small>g</small> <i class="icon" ng-class="{hidden:order != 'amount', 'icon-arrow-down':reverse, 'icon-arrow-up':!reverse}"></i></th>
+    <th ng-click="order='kcal'; reverse=!reverse">Energia <small>kcal</small> <i class="icon" ng-class="{hidden:order != 'kcal', 'icon-arrow-down':reverse, 'icon-arrow-up':!reverse}"></i></th>
+    <th ng-click="order='carbs'; reverse=!reverse">Hiilihydraatti <small>g</small> <i class="icon" ng-class="{hidden:order != 'carbs', 'icon-arrow-down':reverse, 'icon-arrow-up':!reverse}"></i></th>
+    <th ng-click="order='fat'; reverse=!reverse">Rasva <small>g</small> <i class="icon" ng-class="{hidden:order != 'fat', 'icon-arrow-down':reverse, 'icon-arrow-up':!reverse}"></i></th>
+    <th ng-click="order='protein'; reverse=!reverse">Proteiini <small>g</small> <i class="icon" ng-class="{hidden:order != 'protein', 'icon-arrow-down':reverse, 'icon-arrow-up':!reverse}"></i></th>
+    <th></th>
+</tr>
+<tr ng-repeat="bite in bites|orderBy:order:reverse">
+    <td ng-class="{'td-selected': order == 'name'}">{{bite.name|title}}</a></td>
+    <td ng-class="{'td-selected': order == 'amount'}">{{bite.amount}}</td>
+    <td ng-class="{'td-selected': order == 'kcal'}">{{bite.kcal}}</td>
+    <td ng-class="{'td-selected': order == 'carbs'}">{{bite.carbs}}</td>
+    <td ng-class="{'td-selected': order == 'fat'}">{{bite.fat}}</td>
+    <td ng-class="{'td-selected': order == 'protein'}">{{bite.protein}}</td>
+    <td><button ng-click="removeBite(bite)" spin-when="bite.loading" class="btn btn-small btn-danger">Poista <i class="icon icon-remove icon-white"></i></button></td>
+</tr>
+</table>

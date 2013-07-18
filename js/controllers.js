@@ -13,6 +13,56 @@
     };
 })
 
+.controller("DateCtrl", function ($scope, $routeParams, $location, API, UserService) {
+    var date = $routeParams.date;
+    $scope.date = dateFromStr(date);
+    if (!date) {
+        $location.path("/");
+    }
+
+    /** "yyyyMMdd" -> Date object */
+    function dateFromStr(dateStr) {
+        return new Date(dateStr.substring(0,4), dateStr.substring(4,6),
+            dateStr.substring(6));
+    }
+
+    function getBites() {
+        API.fetchSigned("/user/bites/" + date, "GET")
+        .success(function(response) {
+            if (response.status == "success") {
+                $scope.bites = response.data;
+            } else {
+                $location.path("/");
+            }
+        })
+        .error(function(response) {
+            $location.path("/");
+        });
+    }
+
+    $scope.removeBite = function(bite) {
+        bite.loading = true;
+        var biteId = bite["_id"];
+        API.fetchSigned("/user/bites/" + biteId, "DELETE")
+        .success(function(response) {
+            if (response.status == "success") {
+                $scope.bites.splice($scope.bites.indexOf(bite), 1);
+            } else {
+                alert("Poistaminen epäonnistui!");
+                console.log("BITE REMOVE ERROR=" + JSON.stringify(response));
+                bite.loading = false;
+            }
+        })
+        .error(function(response) {
+            alert("Poistaminen epäonnistui!");
+            console.log("BITE REMOVE ERROR=" + JSON.stringify(response));
+            bite.loading = false;
+        });
+    };
+
+    getBites();
+})
+
 // Login and registration
 .controller("LoginCtrl", function ($scope, $http, $location, API, UserService) {
     $scope.loginTabSelected = true;
@@ -28,7 +78,7 @@
         });
     };
 
-    $scope.login = function (username, password) {
+    $scope.login = function(username, password) {
         $scope.loading = true;
         UserService.setCredentials(username, password);
         API.fetchSigned("/user")
@@ -53,7 +103,7 @@
         });
     };
 
-    $scope.register = function (form) {
+    $scope.register = function(form) {
         if (form.password != form.passwordAgain) {
             $scope.registerMessage = "Varmistus ei täsmää salasanaa";
             return;
@@ -233,6 +283,7 @@
                     date = new Date(d.date);
                     date.setHours(0);
                     d.date = date;
+                    d.apiDate = formatDate(date);
                 });
 
                 $scope.dates = dates.sort(function(a,b){
@@ -365,6 +416,7 @@
             .success(function(response) {
                 if (response.status == "success") {
                     $scope.results = response.data;
+                    $scope.activeTab = "results";
                 } else {
                     console.log("FOOD QUERY ERROR=" + JSON.stringify(response));
                 }
@@ -505,5 +557,20 @@
         });
     };
 
+    $scope.getTopFoods = function() {
+        API.fetch("/topfoods")
+        .success(function(response){
+            if (response.status == "success") {
+                $scope.topFoods = response.data;
+            } else {
+                console.log("TOP10 ERROR=" + JSON.stringify(response));
+            }
+        })
+        .error(function(response) {
+            console.log("TOP10 ERROR=" + JSON.stringify(response));
+        });
+    };
+
     $scope.getFavourites();
+    $scope.getTopFoods();
 });

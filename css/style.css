@@ -12,8 +12,13 @@
 }
 
 /* FOOD SEARCH PAGE */
-.food-search .favourites {
-    background-color: #EEEEEE;
+.food-search .input-append {
+    margin-left: 0;
+}
+
+.food-search .scrollbox {
+    overflow-y: auto;
+    max-height: 450px;
 }
 
 /* BITES PAGE */
@@ -210,4 +215,8 @@ path.protein {
 
 .nomargin {
     margin: 0;
+}
+
+.td-selected {
+    background-color: #F5F7F7;
 }

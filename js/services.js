@@ -37,7 +37,14 @@
     }
 
     function getGoals() { return goals; }
-    function setGoals(newGoals) { goals = newGoals; }
+    function setGoals(newGoals) {
+        var attrs = ["kcal", "carbs", "fat", "protein"];
+        if (_.every(attrs, function(x) { return x in newGoals; })) {
+            goals = newGoals;
+        } else {
+            goals = null;
+        }
+    }
 
     function getFavs() { return favs; }
     function setFavs(newFavs) { favs = newFavs; }

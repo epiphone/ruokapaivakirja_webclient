@@ -55,12 +55,12 @@
             <th ng-click="datesOrder='protein'; datesReverse=!datesReverse">Proteiini <small>g</small> <i class="icon" ng-class="{hidden:datesOrder != 'protein', 'icon-arrow-down':datesReverse, 'icon-arrow-up':!datesReverse}"></i></th>
           </tr>
           <tr ng-repeat="date in dates|orderBy:datesOrder:datesReverse">
-            <td>{{date.date|date:"d.M.yy"}}</td>
-            <td>{{date.count}}</td>
-            <td>{{date.kcal}}</td>
-            <td>{{date.carbs}}</td>
-            <td>{{date.fat}}</td>
-            <td>{{date.protein}}</td>
+            <td ng-class="{'td-selected': datesOrder == 'date'}"><a href="#/dates/{{date.apiDate}}">{{date.date|date:"d.M.yy"}}</a></td>
+            <td ng-class="{'td-selected': datesOrder == 'count'}">{{date.count}}</td>
+            <td ng-class="{'td-selected': datesOrder == 'kcal'}">{{date.kcal}}</td>
+            <td ng-class="{'td-selected': datesOrder == 'carbs'}">{{date.carbs}}</td>
+            <td ng-class="{'td-selected': datesOrder == 'fat'}">{{date.fat}}</td>
+            <td ng-class="{'td-selected': datesOrder == 'protein'}">{{date.protein}}</td>
           </tr>
         </table>
       </div> <!-- /ng-switch-default -->

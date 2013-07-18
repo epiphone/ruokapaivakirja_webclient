@@ -1,87 +1,104 @@
 <div class="row">
 
-  <!-- FOOD SEARCH & RESULTS -->
-  <div class="span6 food-search">
-    <div class="input-append span6">
-      <input type="text" ng-model="query" ng-change="search(query)" autofocus="autofocus" placeholder="Hae elintarvikkeita">
-      <button spin-when="queryLoading" ng-click="search(query)" class="btn btn-primary" type="button"><i class="icon icon-white icon-search"></i></button>
-    </div>
-    <!-- FAVOURITES -->
-    <div ng-show="favourites.length > 0" class="favourites">
-      <strong>Suosikit:</strong>
-      <div ng-repeat="fav in favourites">
-        <a href="" ng-click="selectFood(fav.fid)">{{fav.name|title}}</a>
-      </div>
-    </div>
-    <!-- SEARCH RESULTS -->
-    <div class="results">
-      <strong>Hakutulokset:</strong>
-      <div ng-repeat="res in results">
-        <a href="" ng-click="selectFood(res[0])">{{res[1]}}</a>
-      </div>
-      <div ng-show="results == []">Ei hakutuloksia</div>
-    </div>
-  </div>
-
   <!-- FOOD DETAILS -->
-  <div class="span6" ng-switch on="isFoodLoading">
+  <div class="span6 pull-right" ng-switch on="isFoodLoading">
     <div ng-switch-when="false">
-      <h3>{{food.name|title}}</h3>
+      <div>
+        <h3>{{food.name|title}}</h3>
 
-      Annos: <input type="number" class="input-mini" ng-model="bite.amount" min="1" max="10000" required/> g
-      <div ng-switch on="foodInFavourites(food['_id'])" class="pull-right">
-        <button class="btn btn-success" ng-click="openModal()">Lisää annos <i class="icon-plus icon-white"></i></button>
-        <button  ng-switch-when="true" class="btn btn-danger" ng-click="removeFavourite(food['_id'])">Poista suosikeista <i ng-class="favouriteLoading ? 'icon-refresh icon-spin' : 'icon-remove'" class="icon-white"></i></button>
-        <button  ng-switch-default class="btn btn-warning" ng-click="addFavourite(food['_id'], food.name)">Lisää suosikkeihin <i ng-class="favouriteLoading ? 'icon-refresh icon-spin' : 'icon-star'" class="icon-white"></i></button>
+        Annos: <input type="number" class="input-mini" ng-model="bite.amount" min="1" max="10000" required/> g
+        <span ng-switch on="foodInFavourites(food['_id'])" class="pull-right">
+          <button class="btn btn-success" ng-click="openModal()">Lisää annos <i class="icon-plus icon-white"></i></button>
+          <button  ng-switch-when="true" class="btn btn-danger" ng-click="removeFavourite(food['_id'])">Poista suosikeista <i ng-class="favouriteLoading ? 'icon-refresh icon-spin' : 'icon-remove'" class="icon-white"></i></button>
+          <button  ng-switch-default class="btn btn-warning" ng-click="addFavourite(food['_id'], food.name)">Lisää suosikkeihin <i ng-class="favouriteLoading ? 'icon-refresh icon-spin' : 'icon-star'" class="icon-white"></i></button>
+        </span>
       </div>
+      <br>
       <table class="table table-hover">
         <tr class="info">
           <th>Ravintotekijä</th>
           <th>Pitoisuus</th>
           <th>Yksikkö</th>
         </tr>
-        <tr class="info">
-          <td colspan="3">Perusravintotekijät</td>
-        </tr>
         <tr ng-repeat='item in ["energia, laskennallinen", "hiilihydraatti imeytyvä", "rasva", "proteiini"]'>
           <td>{{item}}</td>
           <td>{{food.data[item][0] / 100 * bite.amount | number:1}}</td>
           <td>{{food.data[item][1]}}</td>
         </tr>
-        <tr class="info">
+        <!-- <tr class="info">
           <td colspan="3">Vitamiinit</td>
         </tr>
         <tr ng-repeat='item in ["C-vitamiini", "D-vitamiini"]'>
           <td>{{item}}</td>
           <td>{{food.data[item][0] / 100 * bite.amount | number:1}}</td>
           <td>{{food.data[item][1]}}</td>
-        </tr>
+        </tr> -->
       </table>
     </div>
     <div ng-switch-when="true">Lataa...</div>
-    <div ng-switch-default>Hae elintarvikkeita</div>
+    <div ng-switch-default><i class="icon icon-arrow-left"></i> Valitse elintarvike</div>
   </div>
 
-  <!-- MODAL FOR ADDING A BITE -->
-  <div id="modal" class="modal hide fade" tabindex="-1" role="dialog">
-    <div class="modal-header">
-      <h4>Lisää annos</h4>
+  <!-- FOOD SEARCH & RESULTS -->
+  <div class="span6 food-search pull-left">
+    <div class="input-append span5">
+      <input type="text" ng-model="query" ng-change="search(query)" autofocus="autofocus" placeholder="Hae elintarvikkeita">
+      <button spin-when="queryLoading" ng-click="search(query)" class="btn btn-primary" type="button"><i class="icon icon-white icon-search"></i></button>
     </div>
-    <div class="modal-body" ng-switch on="addStatus">
-      <div ng-switch-when="loading">Lisätään annosta...</div>
-      <div ng-switch-when="success">Annos lisätty!</div>
-      <div ng-switch-when="error">Annoksen lisääminen epäonnistui</div>
-      <div ng-show="addStatus=='started'">
-        <p>{{food.name|title}}, <strong>{{bite.amount}}g</strong></p>
-        <div datepicker="selectedDate" id="datepicker"></div>
+    <br>
+
+    <ul class="nav nav-tabs">
+      <li ng-init="activeTab = 'top10'" ng-click="activeTab = 'results'" ng-class="{active:activeTab == 'results'}"><a href="">Hakutulokset</a></li>
+      <li ng-click="activeTab = 'favs'" ng-class="{active:activeTab == 'favs'}"><a href="">Suosikit</a></li>
+      <li ng-click="activeTab = 'top10'" ng-class="{active:activeTab == 'top10'}"><a href="">Top 10</a></li>
+    </ul>
+
+    <div ng-switch on="activeTab" class="scrollbox">
+
+      <!-- SEARCH RESULTS -->
+      <div ng-switch-when="results">
+        <div ng-repeat="res in results">
+          <a href="" ng-click="selectFood(res[0])">{{res[1]}}</a>
+        </div>
+        <div ng-show="results.length == 0">Ei hakutuloksia</div>
+      </div>
+
+      <!-- FAVOURITES -->
+      <div ng-switch-when="favs" ng-show="activeTab">
+        <div ng-repeat="fav in favourites">
+          <a href="" ng-click="selectFood(fav.fid)">{{fav.name|title}}</a>
+        </div>
+      </div>
+
+      <!-- TOP 10 -->
+      <div ng-switch-when="top10">
+        <div ng-repeat="food in topFoods">
+          {{$index+1}}. <a href="" ng-click="selectFood(food.fid)">{{food.name|title}} [{{food.count}}kpl]</a>
+        </div>
+        <div ng-show="!topFoods.length">Lataa...</div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-success" ng-show="addStatus == 'started'" ng-click="addBite()">Lisää</button>
-      <button class="btn btn-danger" ng-hide="addStatus == 'success'" ng-click="closeModal()">Peruuta <i ng-show="addStatus == 'loading'" class="icon-refresh icon-spin"></i></button>
-      <button class="btn btn-success" ng-show="addStatus == 'success'" ng-click="closeModal()">Valmis</button>
-    </div>
-  </div>
 
-</div> <!-- /.row -->
+    <!-- MODAL FOR ADDING A BITE -->
+    <div id="modal" class="modal hide fade" tabindex="-1" role="dialog">
+      <div class="modal-header">
+        <h4>Lisää annos</h4>
+      </div>
+      <div class="modal-body" ng-switch on="addStatus">
+        <div ng-switch-when="loading">Lisätään annosta...</div>
+        <div ng-switch-when="success">Annos lisätty!</div>
+        <div ng-switch-when="error">Annoksen lisääminen epäonnistui</div>
+        <div ng-show="addStatus=='started'">
+          <p>{{food.name|title}}, <strong>{{bite.amount}}g</strong></p>
+          <div datepicker="selectedDate" id="datepicker"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-success" ng-show="addStatus == 'started'" ng-click="addBite()">Lisää</button>
+        <button class="btn btn-danger" ng-hide="addStatus == 'success'" ng-click="closeModal()">Peruuta <i ng-show="addStatus == 'loading'" class="icon-refresh icon-spin"></i></button>
+        <button class="btn btn-success" ng-show="addStatus == 'success'" ng-click="closeModal()">Valmis</button>
+      </div>
+    </div>
+
+  </div> <!-- /.row -->
 
