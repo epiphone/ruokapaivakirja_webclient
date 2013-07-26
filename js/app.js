@@ -8,6 +8,8 @@ Aleksi Pekkala (aleksi.v.a.pekkala@student.jyu.fi)
 // actions from being taken and throws more exceptions."
 "use strict";
 
+angular.module("app.controllers", []);
+
 // Declare app level module which depends on filters, and services
 angular.module("app", ["app.filters", "app.services", "app.directives", "app.controllers"])
 .config(function($routeProvider, $httpProvider) {
