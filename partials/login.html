@@ -20,8 +20,8 @@
         <div ng-switch-when="true">
           <form class="form login-form">
             <legend><h2 class="form-signin-heading">Kirjaudu sisään</h2></legend>
-            <input type="text" ng-init="login.username='aleksi'" ng-model="login.username" class="input-block-level" placeholder="Käyttäjänimi" required autofocus>
-            <input type="password" ng-init="login.password='aleksi'" ng-model="login.password" class="input-block-level" placeholder="Salasana" required>
+            <input type="text" ng-model="login.username" class="input-block-level" placeholder="Käyttäjänimi" required autofocus>
+            <input type="password" ng-model="login.password" class="input-block-level" placeholder="Salasana" required>
             <hr>
             <button spin-when="loading" ng-click="login(login.username, login.password)" type="submit" class="btn btn-large btn-primary">Kirjaudu</button>
             <br>
